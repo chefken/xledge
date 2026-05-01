@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:xledge/utils/void_colors.dart';
-import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/models/expense_model.dart';
+import 'package:xledge/utils/category_utils.dart';
+import 'package:xledge/utils/void_colors.dart';
 
 class TransactionTile extends StatelessWidget {
   final Expense expense;
@@ -15,10 +15,10 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meta = categoryMeta(expense.category);
-    final dateStr =
-        '${expense.date.day.toString().padLeft(2, '0')} '
-        '${_month(expense.date.month)}';
+    final meta      = categoryMeta(expense.category);
+    final isAllow   = expense.isAllowance;
+    final amtColor  = isAllow ? VoidColors.success : VoidColors.danger;
+    final amtPrefix = isAllow ? '+' : '-';
 
     return Dismissible(
       key: Key(expense.id),
@@ -42,36 +42,46 @@ class TransactionTile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                  color: meta.lightColor, shape: BoxShape.circle),
-              child: Icon(meta.icon, color: meta.color, size: 22),
+                color: isAllow ? VoidColors.successLight : meta.lightColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isAllow ? Icons.savings_rounded : meta.icon,
+                color: isAllow ? VoidColors.success : meta.color,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(expense.title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: VoidColors.textPrimary,
-                        letterSpacing: -0.1,
-                      )),
-                  const SizedBox(height: 3),
-                  Text('${expense.category}  ·  $dateStr',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: VoidColors.textSecondary,
-                      )),
+                  Text(
+                    expense.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: VoidColors.textPrimary,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isAllow ? 'Allowance · ${_fmtDate(expense.date)}' : _fmtDate(expense.date),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: VoidColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
             Text(
-              '-₹${expense.amount.toStringAsFixed(2)}',
-              style: const TextStyle(
+              '$amtPrefix₹${expense.amount.toStringAsFixed(2)}',
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: VoidColors.danger,
+                color: amtColor,
                 letterSpacing: -0.3,
               ),
             ),
@@ -81,8 +91,9 @@ class TransactionTile extends StatelessWidget {
     );
   }
 
-  String _month(int m) => const [
-        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ][m];
+  String _fmtDate(DateTime d) {
+    const m = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${d.day.toString().padLeft(2, '0')} ${m[d.month]}';
+  }
 }

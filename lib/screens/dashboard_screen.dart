@@ -14,6 +14,8 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<VoidProvider>(
       builder: (context, provider, _) {
+        final recent = provider.expenses.take(5).toList();
+
         return CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
@@ -22,38 +24,33 @@ class DashboardScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(
                     VoidSpacing.screenH, 16, VoidSpacing.screenH, 0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            // THE LOGO
-                            Image.asset(
-                              'assets/images/xl.png',
-                              height: 32,
-                              fit: BoxFit.contain,
-                            ),
-                            const SizedBox(width: 10),
-                            Text('XLedge',
-                                style: VoidTextStyles.headlineMedium),
-                          ],
+                    Image.asset('assets/xl.png', width: 32, height: 32),
+                    const SizedBox(width: 10),
+                    const Text('XLedge',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: VoidColors.textPrimary,
+                          letterSpacing: -0.5,
+                        )),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: VoidColors.primaryLight,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        _monthYear(provider.selectedMonth,
+                            provider.selectedYear),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: VoidColors.primary,
                         ),
-                        Text(_monthYear(provider.selectedMonth,
-                                provider.selectedYear),
-                            style: VoidTextStyles.bodyMedium),
-                      ],
-                    ),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: VoidColors.primaryLight,
-                      child: const Text('K',
-                          style: TextStyle(
-                            color: VoidColors.primary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          )),
+                      ),
                     ),
                   ],
                 ),
@@ -65,66 +62,51 @@ class DashboardScreen extends StatelessWidget {
                     VoidSpacing.screenH, 20, VoidSpacing.screenH, 0),
                 child: BalanceHeroCard(
                   totalSpend:    provider.analysis?.totalSpend ?? 0,
-                  totalTheyOwe:  provider.totalTheyOwe,
-                  totalIOwe:     provider.totalIOwe,
+                  totalAllowance: provider.totalAllowance,
+                  netBalance:    provider.netBalance,
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                    VoidSpacing.screenH, VoidSpacing.sectionGap,
-                    VoidSpacing.screenH, 12),
+                    VoidSpacing.screenH, 28, VoidSpacing.screenH, 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Recent', style: VoidTextStyles.titleLarge),
-                    if (provider.expenses.isNotEmpty)
-                      Text('${provider.expenses.length} total',
-                          style: VoidTextStyles.bodyMedium),
+                    Text('Recent Transactions',
+                        style: VoidTextStyles.titleLarge),
+                    if (provider.expenses.length > 5)
+                      TextButton(
+                        onPressed: () {},
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          foregroundColor: VoidColors.primary,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('See all',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            )),
+                      ),
                   ],
                 ),
               ),
             ),
-            provider.expenses.isEmpty
-                ? SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 64,
-                            height: 64,
-                            decoration: const BoxDecoration(
-                              color: VoidColors.primaryLight,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.receipt_long_rounded,
-                                color: VoidColors.primary, size: 28),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text('No transactions yet',
-                              style: VoidTextStyles.titleMedium),
-                          const SizedBox(height: 4),
-                          const Text('Tap + to add your first',
-                              style: VoidTextStyles.bodyMedium),
-                        ],
-                      ),
-                    ),
-                  )
+            recent.isEmpty
+                ? SliverToBoxAdapter(child: _EmptyDashboard())
                 : SliverPadding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: VoidSpacing.screenH),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (_, i) => TransactionTile(
-                          expense: provider.expenses[i],
+                          expense: recent[i],
                           onDismiss: () =>
-                              provider.deleteExpense(provider.expenses[i].id),
+                              provider.deleteExpense(recent[i].id),
                         ),
-                        childCount: provider.expenses.length > 5
-                            ? 5
-                            : provider.expenses.length,
+                        childCount: recent.length,
                       ),
                     ),
                   ),
@@ -136,10 +118,36 @@ class DashboardScreen extends StatelessWidget {
   }
 
   String _monthYear(int month, int year) {
-    const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${months[month]} $year';
+  }
+}
+
+class _EmptyDashboard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Column(
+        children: [
+          Container(
+            width: 72, height: 72,
+            decoration: const BoxDecoration(
+              color: VoidColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.receipt_long_rounded,
+                color: VoidColors.primary, size: 32),
+          ),
+          const SizedBox(height: 16),
+          const Text('No transactions yet',
+              style: VoidTextStyles.titleMedium),
+          const SizedBox(height: 4),
+          const Text('Tap + to log your first record',
+              style: VoidTextStyles.bodyMedium),
+        ],
+      ),
+    );
   }
 }

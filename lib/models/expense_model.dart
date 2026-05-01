@@ -22,6 +22,9 @@ class Expense extends HiveObject {
   @HiveField(5)
   final String? note;
 
+  @HiveField(6)
+  final bool isAllowance;
+
   Expense({
     required this.id,
     required this.title,
@@ -29,5 +32,6 @@ class Expense extends HiveObject {
     required this.category,
     required this.date,
     this.note,
+    this.isAllowance = false,
   });
 }

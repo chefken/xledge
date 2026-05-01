@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/models/debt_model.dart';
+import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/providers/void_provider.dart';
 import 'package:xledge/screens/root_screen.dart';
 import 'package:xledge/utils/void_constants.dart';

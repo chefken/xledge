@@ -1,54 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:xledge/services/auth_service.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_spacing.dart';
 import 'package:xledge/utils/void_text_styles.dart';
 
 class BalanceHeroCard extends StatefulWidget {
   final double totalSpend;
-  final double totalTheyOwe;
-  final double totalIOwe;
+  final double totalAllowance;
+  final double netBalance;
 
   const BalanceHeroCard({
     super.key,
     required this.totalSpend,
-    required this.totalTheyOwe,
-    required this.totalIOwe,
+    required this.totalAllowance,
+    required this.netBalance,
   });
 
   @override
   State<BalanceHeroCard> createState() => _BalanceHeroCardState();
 }
 
-class _BalanceHeroCardState extends State<BalanceHeroCard>
-    with SingleTickerProviderStateMixin {
-  bool _visible = true;
-  late AnimationController _ctrl;
-  late Animation<double> _fade;
+class _BalanceHeroCardState extends State<BalanceHeroCard> {
+  bool _visible = false;
+  bool _loading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 260));
-    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-    _ctrl.forward();
+  Future<void> _toggleVisibility() async {
+    if (_visible) {
+      setState(() => _visible = false);
+      return;
+    }
+    setState(() => _loading = true);
+    final auth = await AuthService.authenticate(
+      reason: 'Verify identity to view your balance',
+    );
+    if (mounted) setState(() { _loading = false; _visible = auth; });
   }
 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
+  String _fmt(double v, {bool signed = false}) {
+    if (!_visible) return '₹ ••••••';
+    final prefix = signed && v >= 0 ? '+' : '';
+    return '$prefix₹${v.toStringAsFixed(2)}';
   }
-
-  void _toggle() {
-    setState(() => _visible = !_visible);
-    _visible ? _ctrl.forward() : _ctrl.reverse();
-  }
-
-  String _fmt(double v) => _visible ? '₹${v.toStringAsFixed(2)}' : '₹ ••••••';
 
   @override
   Widget build(BuildContext context) {
+    final netPositive = widget.netBalance >= 0;
+
     return Container(
       padding: const EdgeInsets.all(VoidSpacing.cardInner),
       decoration: BoxDecoration(
@@ -62,33 +59,50 @@ class _BalanceHeroCardState extends State<BalanceHeroCard>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Monthly Spend',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: VoidColors.textSecondary,
-                  )),
+              const Text(
+                'Spent this month',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: VoidColors.textSecondary,
+                ),
+              ),
               GestureDetector(
-                onTap: _toggle,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    _visible
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    key: ValueKey(_visible),
-                    color: VoidColors.textSecondary,
-                    size: 20,
+                onTap: _loading ? null : _toggleVisibility,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: VoidColors.primaryLight,
+                    shape: BoxShape.circle,
                   ),
+                  child: _loading
+                      ? const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: VoidColors.primary,
+                          ),
+                        )
+                      : Icon(
+                          _visible
+                              ? Icons.fingerprint
+                              : Icons.fingerprint,
+                          color: _visible
+                              ? VoidColors.primary
+                              : VoidColors.textSecondary,
+                          size: 20,
+                        ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          FadeTransition(
-            opacity: _fade,
-            child: Text(_fmt(widget.totalSpend),
-                style: VoidTextStyles.displayLarge),
+          Text(
+            _fmt(widget.totalSpend),
+            style: VoidTextStyles.displayLarge.copyWith(
+              color: VoidColors.danger,
+            ),
           ),
           const SizedBox(height: VoidSpacing.lg),
           const Divider(color: VoidColors.outline, height: 1),
@@ -97,8 +111,8 @@ class _BalanceHeroCardState extends State<BalanceHeroCard>
             children: [
               Expanded(
                 child: _MiniStat(
-                  label: 'They Owe Me',
-                  value: _fmt(widget.totalTheyOwe),
+                  label: 'Allowance',
+                  value: _fmt(widget.totalAllowance),
                   icon: Icons.arrow_downward_rounded,
                   iconColor: VoidColors.success,
                   bgColor: VoidColors.successLight,
@@ -107,11 +121,16 @@ class _BalanceHeroCardState extends State<BalanceHeroCard>
               const SizedBox(width: 12),
               Expanded(
                 child: _MiniStat(
-                  label: 'I Owe',
-                  value: _fmt(widget.totalIOwe),
-                  icon: Icons.arrow_upward_rounded,
-                  iconColor: VoidColors.danger,
-                  bgColor: VoidColors.dangerLight,
+                  label: 'Net Balance',
+                  value: _fmt(widget.netBalance, signed: true),
+                  icon: netPositive
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  iconColor:
+                      netPositive ? VoidColors.success : VoidColors.danger,
+                  bgColor: netPositive
+                      ? VoidColors.successLight
+                      : VoidColors.dangerLight,
                 ),
               ),
             ],

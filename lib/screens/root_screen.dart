@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:xledge/screens/activity_screen.dart';
 import 'package:xledge/screens/add_debt_sheet.dart';
 import 'package:xledge/screens/add_expense_sheet.dart';
 import 'package:xledge/screens/dashboard_screen.dart';
@@ -17,67 +18,101 @@ class RootScreen extends StatefulWidget {
 class _RootScreenState extends State<RootScreen> {
   int _tab = 0;
 
-  static const _screens = [
-    DashboardScreen(),
-    ExpensesScreen(),
-    DebtsScreen(),
+  static const _labels = ['Home', 'Expenses', 'Debts', 'Activity'];
+  static const _icons  = [
+    Icons.home_rounded,
+    Icons.receipt_long_rounded,
+    Icons.handshake_rounded,
+    Icons.bar_chart_rounded,
   ];
 
-  void _showAddSheet() {
+  Widget _screen() {
+    switch (_tab) {
+      case 0: return const DashboardScreen();
+      case 1: return const ExpensesScreen();
+      case 2: return const DebtsScreen();
+      case 3: return const ActivityScreen();
+      default: return const DashboardScreen();
+    }
+  }
+
+  void _showFab() {
+    if (_tab == 3) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _tab == 2
-          ? const AddDebtSheet()
-          : const AddExpenseSheet(),
+      builder: (_) {
+        if (_tab == 2) return const AddDebtSheet();
+        return const AddExpenseSheet();
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(child: _screens[_tab]),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddSheet,
-        icon: const Icon(Icons.add_rounded),
-        label: Text(_tab == 2 ? 'Add Debt' : 'Add Expense'),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: _XLedgeNavBar(
+      body: SafeArea(child: _screen()),
+      floatingActionButton: _tab != 3
+          ? FloatingActionButton(
+              onPressed: _showFab,
+              backgroundColor: VoidColors.primary,
+              child: const Icon(Icons.add_rounded, color: Colors.white),
+            )
+          : null,
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: _BottomNav(
         current: _tab,
-        onTap: (i) => setState(() => _tab = i),
+        labels:  _labels,
+        icons:   _icons,
+        onTap:   (i) => setState(() => _tab = i),
       ),
     );
   }
 }
 
-class _XLedgeNavBar extends StatelessWidget {
+class _BottomNav extends StatelessWidget {
   final int current;
+  final List<String> labels;
+  final List<IconData> icons;
   final ValueChanged<int> onTap;
 
-  const _XLedgeNavBar({required this.current, required this.onTap});
+  const _BottomNav({
+    required this.current,
+    required this.labels,
+    required this.icons,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         color: VoidColors.background,
-        border: Border(top: BorderSide(color: VoidColors.outline, width: 1)),
+        border:
+            Border(top: BorderSide(color: VoidColors.outline, width: 1)),
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(icon: Icons.dashboard_rounded,
-                  label: 'Home', index: 0, current: current, onTap: onTap),
-              _NavItem(icon: Icons.receipt_long_rounded,
-                  label: 'Expenses', index: 1, current: current, onTap: onTap),
-              const SizedBox(width: 64),
-              _NavItem(icon: Icons.handshake_rounded,
-                  label: 'Debts', index: 2, current: current, onTap: onTap),
+              _NavItem(
+                  icon: icons[0], label: labels[0],
+                  index: 0, current: current, onTap: onTap),
+              _NavItem(
+                  icon: icons[1], label: labels[1],
+                  index: 1, current: current, onTap: onTap),
+              const SizedBox(width: 56),
+              _NavItem(
+                  icon: icons[2], label: labels[2],
+                  index: 2, current: current, onTap: onTap),
+              _NavItem(
+                  icon: icons[3], label: labels[3],
+                  index: 3, current: current, onTap: onTap),
             ],
           ),
         ),
@@ -109,12 +144,14 @@ class _NavItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active ? VoidColors.primaryLight : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon,
                 color: active
@@ -126,7 +163,7 @@ class _NavItem extends StatelessWidget {
               Text(label,
                   style: VoidTextStyles.labelLarge
                       .copyWith(color: VoidColors.primary)),
-            ]
+            ],
           ],
         ),
       ),
