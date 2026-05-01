@@ -1,119 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'package:xledge/utils/void_theme.dart';
-import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/providers/void_provider.dart';
-import 'package:xledge/screens/add_expense_sheet.dart';
+import 'package:xledge/utils/void_colors.dart';
+import 'package:xledge/utils/void_spacing.dart';
+import 'package:xledge/utils/void_text_styles.dart';
+import 'package:xledge/widgets/transaction_tile.dart';
+import 'package:xledge/widgets/category_scroll_row.dart';
 
-class ExpensesScreen extends StatelessWidget {
+class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
 
   @override
+  State<ExpensesScreen> createState() => _ExpensesScreenState();
+}
+
+class _ExpensesScreenState extends State<ExpensesScreen> {
+  String? _filterCategory;
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('VOID // EXPENSES'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: VoidColors.accent),
-            onPressed: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const AddExpenseSheet(),
-            ),
-          ),
-        ],
-      ),
-      body: Consumer<VoidProvider>(
-        builder: (context, provider, _) {
-          final expenses = provider.expenses;
-          if (expenses.isEmpty) {
-            return const Center(
-              child: Text(
-                'NO DATA IN THE VOID',
-                style: TextStyle(
-                  color: VoidColors.textMuted,
-                  letterSpacing: 3,
-                  fontSize: 11,
+    return Consumer<VoidProvider>(
+      builder: (context, provider, _) {
+        final filtered = _filterCategory == null
+            ? provider.expenses
+            : provider.expenses
+                .where((e) => e.category == _filterCategory)
+                .toList();
+
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    VoidSpacing.screenH, 16, VoidSpacing.screenH, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Expenses', style: VoidTextStyles.headlineMedium),
+                    Text(
+                      '${filtered.length} records',
+                      style: VoidTextStyles.bodyMedium,
+                    ),
+                  ],
                 ),
               ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: expenses.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 6),
-            itemBuilder: (context, i) {
-              final e = expenses[i];
-              final meta = categoryMeta(e.category);
-              return Dismissible(
-                key: Key(e.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20),
-                  color: VoidColors.danger.withOpacity(0.15),
-                  child: const Icon(Icons.delete_outline,
-                      color: VoidColors.danger),
-                ),
-                onDismissed: (_) => provider.deleteExpense(e.id),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: VoidColors.card,
-                    border: Border.all(color: VoidColors.border),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 3,
-                        height: 36,
-                        color: meta.color,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              e.title.toUpperCase(),
-                              style: const TextStyle(
-                                color: VoidColors.textPrimary,
-                                fontSize: 12,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${e.category}  ·  ${e.date.day.toString().padLeft(2, '0')}.${e.date.month.toString().padLeft(2, '0')}.${e.date.year}',
-                              style: const TextStyle(
-                                color: VoidColors.textSecondary,
-                                fontSize: 9,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ],
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: VoidSpacing.md)),
+            SliverToBoxAdapter(
+              child: CategoryScrollRow(
+                onSelected: (cat) =>
+                    setState(() => _filterCategory = cat),
+              ),
+            ),
+            const SliverToBoxAdapter(
+                child: SizedBox(height: VoidSpacing.md)),
+            filtered.isEmpty
+                ? SliverFillRemaining(child: _EmptyExpenses())
+                : SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: VoidSpacing.screenH),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (_, i) => TransactionTile(
+                          expense: filtered[i],
+                          onDismiss: () =>
+                              provider.deleteExpense(filtered[i].id),
                         ),
+                        childCount: filtered.length,
                       ),
-                      Text(
-                        '₹${e.amount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: VoidColors.textPrimary,
-                          fontSize: 14,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _EmptyExpenses extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: const BoxDecoration(
+            color: VoidColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.receipt_long_rounded,
+              color: VoidColors.primary, size: 32),
+        ),
+        const SizedBox(height: 16),
+        const Text('No expenses yet',
+            style: VoidTextStyles.titleMedium),
+        const SizedBox(height: 6),
+        const Text('Tap + to log your first expense',
+            style: VoidTextStyles.bodyMedium),
+      ],
     );
   }
 }

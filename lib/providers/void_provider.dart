@@ -1,58 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-
 import 'package:xledge/models/expense_model.dart';
-import 'package:xledge/services/expense_service.dart';
 import 'package:xledge/models/debt_model.dart';
-import 'package:xledge/services/debt_service.dart';
 import 'package:xledge/models/void_analysis.dart';
+import 'package:xledge/services/expense_service.dart';
+import 'package:xledge/services/debt_service.dart';
 
 class VoidProvider extends ChangeNotifier {
   final _expenseService = ExpenseService();
-  final _debtService = DebtService();
-  final _uuid = const Uuid();
+  final _debtService    = DebtService();
+  final _uuid           = const Uuid();
 
-  late int _selectedYear;
-  late int _selectedMonth;
+  late int _year;
+  late int _month;
 
-  List<Expense> _expenses = [];
-  List<Debt> _debts = [];
-  VoidAnalysis? _analysis;
+  List<Expense>  _expenses = [];
+  List<Debt>     _debts    = [];
+  VoidAnalysis?  _analysis;
 
   VoidProvider() {
     final now = DateTime.now();
-    _selectedYear = now.year;
-    _selectedMonth = now.month;
+    _year  = now.year;
+    _month = now.month;
     _load();
   }
 
-  List<Expense> get expenses => _expenses;
-  List<Debt> get debts => _debts;
-  VoidAnalysis? get analysis => _analysis;
-  int get selectedYear => _selectedYear;
-  int get selectedMonth => _selectedMonth;
+  List<Expense>  get expenses     => _expenses;
+  List<Debt>     get debts        => _debts;
+  VoidAnalysis?  get analysis     => _analysis;
+  int            get selectedYear  => _year;
+  int            get selectedMonth => _month;
 
-  List<Debt> get activeDebts => _debts.where((d) => !d.isSettled).toList();
-  List<Debt> get iOweDebts => activeDebts.where((d) => d.isIOwe).toList();
-  List<Debt> get theyOweDebts => activeDebts.where((d) => !d.isIOwe).toList();
-  double get totalIOwe => _debtService.totalIOwe();
-  double get totalTheyOwe => _debtService.totalTheyOwe();
+  List<Debt> get activeDebts   => _debts.where((d) => !d.isSettled).toList();
+  List<Debt> get iOweDebts     => activeDebts.where((d) => d.isIOwe).toList();
+  List<Debt> get theyOweDebts  => activeDebts.where((d) => !d.isIOwe).toList();
+  double     get totalIOwe     => _debtService.totalIOwe();
+  double     get totalTheyOwe  => _debtService.totalTheyOwe();
 
   void _load() {
-    _expenses = _expenseService.getByMonth(_selectedYear, _selectedMonth);
-    _debts = _debtService.getAll();
-    _computeAnalysis();
+    _expenses = _expenseService.getByMonth(_year, _month);
+    _debts    = _debtService.getAll();
+    _buildAnalysis();
   }
 
-  void _computeAnalysis() {
-    final monthly = _expenseService.getByMonth(_selectedYear, _selectedMonth);
+  void _buildAnalysis() {
+    final monthly = _expenseService.getByMonth(_year, _month);
 
     if (monthly.isEmpty) {
       _analysis = VoidAnalysis(
-        year: _selectedYear,
-        month: _selectedMonth,
-        totalSpend: 0,
-        categoryBreakdown: [],
+        year: _year, month: _month,
+        totalSpend: 0, categoryBreakdown: [],
       );
       return;
     }
@@ -62,26 +59,26 @@ class VoidProvider extends ChangeNotifier {
       totals[e.category] = (totals[e.category] ?? 0) + e.amount;
     }
 
-    final grandTotal = totals.values.fold(0.0, (a, b) => a + b);
+    final grand = totals.values.fold(0.0, (a, b) => a + b);
 
-    final breakdown = totals.entries.map((entry) {
-      return CategoryTotal(
-        category: entry.key,
-        total: entry.value,
-        percentage: grandTotal > 0 ? (entry.value / grandTotal) * 100 : 0,
-      );
-    }).toList()
+    final breakdown = totals.entries
+        .map((e) => CategoryTotal(
+              category:   e.key,
+              total:      e.value,
+              percentage: grand > 0 ? (e.value / grand) * 100 : 0,
+            ))
+        .toList()
       ..sort((a, b) => b.total.compareTo(a.total));
 
     final leak = breakdown.isNotEmpty ? breakdown.first : null;
 
     _analysis = VoidAnalysis(
-      year: _selectedYear,
-      month: _selectedMonth,
-      totalSpend: grandTotal,
-      categoryBreakdown: breakdown,
-      primaryLeak: leak?.category,
-      primaryLeakAmount: leak?.total,
+      year:                 _year,
+      month:                _month,
+      totalSpend:           grand,
+      categoryBreakdown:    breakdown,
+      primaryLeak:          leak?.category,
+      primaryLeakAmount:    leak?.total,
       primaryLeakPercentage: leak?.percentage,
     );
   }
@@ -93,15 +90,14 @@ class VoidProvider extends ChangeNotifier {
     required DateTime date,
     String? note,
   }) async {
-    final expense = Expense(
-      id: _uuid.v4(),
-      title: title,
-      amount: amount,
+    await _expenseService.add(Expense(
+      id:       _uuid.v4(),
+      title:    title,
+      amount:   amount,
       category: category,
-      date: date,
-      note: note,
-    );
-    await _expenseService.add(expense);
+      date:     date,
+      note:     note,
+    ));
     _load();
     notifyListeners();
   }
@@ -118,15 +114,14 @@ class VoidProvider extends ChangeNotifier {
     required String description,
     required bool isIOwe,
   }) async {
-    final debt = Debt(
-      id: _uuid.v4(),
+    await _debtService.add(Debt(
+      id:          _uuid.v4(),
       contactName: contactName,
-      amount: amount,
+      amount:      amount,
       description: description,
-      createdAt: DateTime.now(),
-      isIOwe: isIOwe,
-    );
-    await _debtService.add(debt);
+      createdAt:   DateTime.now(),
+      isIOwe:      isIOwe,
+    ));
     _load();
     notifyListeners();
   }
@@ -144,8 +139,8 @@ class VoidProvider extends ChangeNotifier {
   }
 
   void setMonth(int year, int month) {
-    _selectedYear = year;
-    _selectedMonth = month;
+    _year  = year;
+    _month = month;
     _load();
     notifyListeners();
   }

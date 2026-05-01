@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'package:xledge/utils/void_theme.dart';
 import 'package:xledge/providers/void_provider.dart';
+import 'package:xledge/utils/void_colors.dart';
+import 'package:xledge/utils/void_spacing.dart';
+import 'package:xledge/utils/void_text_styles.dart';
 
 class AddDebtSheet extends StatefulWidget {
   const AddDebtSheet({super.key});
@@ -12,9 +13,9 @@ class AddDebtSheet extends StatefulWidget {
 }
 
 class _AddDebtSheetState extends State<AddDebtSheet> {
-  final _nameCtrl = TextEditingController();
+  final _nameCtrl   = TextEditingController();
   final _amountCtrl = TextEditingController();
-  final _descCtrl = TextEditingController();
+  final _descCtrl   = TextEditingController();
   bool _isIOwe = true;
 
   @override
@@ -26,143 +27,135 @@ class _AddDebtSheetState extends State<AddDebtSheet> {
   }
 
   void _submit() {
-    final name = _nameCtrl.text.trim();
+    final name   = _nameCtrl.text.trim();
     final amount = double.tryParse(_amountCtrl.text.trim());
-    final desc = _descCtrl.text.trim();
+    final desc   = _descCtrl.text.trim();
     if (name.isEmpty || amount == null || amount <= 0 || desc.isEmpty) return;
-
     context.read<VoidProvider>().addDebt(
           contactName: name,
-          amount: amount,
+          amount:      amount,
           description: desc,
-          isIOwe: _isIOwe,
+          isIOwe:      _isIOwe,
         );
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: VoidColors.surface,
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'LOG DEBT',
-                style: TextStyle(
-                  color: VoidColors.accent,
-                  fontSize: 12,
-                  letterSpacing: 4,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.close, color: VoidColors.textSecondary),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            decoration: BoxDecoration(
-              color: VoidColors.card,
-              border: Border.all(color: VoidColors.border),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: Row(
-              children: [
-                _toggle('I OWE', true),
-                _toggle('THEY OWE', false),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _nameCtrl,
-            style: const TextStyle(color: VoidColors.textPrimary),
-            decoration: const InputDecoration(labelText: 'CONTACT NAME'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _amountCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-              color: VoidColors.accent,
-              fontSize: 18,
-              letterSpacing: 2,
-            ),
-            decoration: const InputDecoration(
-              labelText: 'AMOUNT',
-              prefixText: '₹ ',
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _descCtrl,
-            style: const TextStyle(color: VoidColors.textPrimary, fontSize: 12),
-            decoration: const InputDecoration(labelText: 'REASON'),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isIOwe ? VoidColors.danger : VoidColors.success,
-                foregroundColor: VoidColors.bg,
-                shape: RoundedRectangleBorder(
+    final activeColor = _isIOwe ? VoidColors.danger : VoidColors.success;
+
+    return Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: VoidColors.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: const Text(
-                'COMMIT',
-                style: TextStyle(
-                  letterSpacing: 4,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Text('Add Debt', style: VoidTextStyles.titleLarge),
+            const SizedBox(height: VoidSpacing.md),
+            Container(
+              decoration: BoxDecoration(
+                color: VoidColors.surface,
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(color: VoidColors.outline),
+              ),
+              child: Row(
+                children: [
+                  _ToggleTab(
+                      label: 'I Owe',
+                      active: _isIOwe,
+                      color: VoidColors.danger,
+                      onTap: () => setState(() => _isIOwe = true)),
+                  _ToggleTab(
+                      label: 'They Owe Me',
+                      active: !_isIOwe,
+                      color: VoidColors.success,
+                      onTap: () => setState(() => _isIOwe = false)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _nameCtrl,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(labelText: 'Contact Name'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _amountCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Amount',
+                prefixText: '₹ ',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _descCtrl,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(labelText: 'Reason'),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: activeColor,
+              ),
+              child: const Text('Save Debt'),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _toggle(String label, bool value) {
-    final selected = _isIOwe == value;
-    final color = value ? VoidColors.danger : VoidColors.success;
+class _ToggleTab extends StatelessWidget {
+  final String label;
+  final bool active;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ToggleTab({
+    required this.label,
+    required this.active,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _isIOwe = value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: selected ? color.withOpacity(0.15) : Colors.transparent,
-            border: Border.all(
-              color: selected ? color : Colors.transparent,
-              width: 0,
-            ),
+            color: active ? color : Colors.transparent,
+            borderRadius: BorderRadius.circular(100),
           ),
           alignment: Alignment.center,
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? color : VoidColors.textSecondary,
-              fontSize: 10,
-              letterSpacing: 2,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: active ? VoidColors.onPrimary : VoidColors.textSecondary,
             ),
           ),
         ),

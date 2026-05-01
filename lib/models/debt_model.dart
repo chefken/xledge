@@ -2,8 +2,6 @@ import 'package:hive/hive.dart';
 
 part 'debt_model.g.dart';
 
-enum DebtDirection { iOwe, theyOwe }
-
 @HiveType(typeId: 1)
 class Debt extends HiveObject {
   @HiveField(0)
@@ -40,7 +38,4 @@ class Debt extends HiveObject {
     this.isSettled = false,
     this.settledAt,
   });
-
-  DebtDirection get direction =>
-      isIOwe ? DebtDirection.iOwe : DebtDirection.theyOwe;
 }

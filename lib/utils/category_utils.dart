@@ -1,52 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:xledge/utils/void_theme.dart';
-import 'package:xledge/utils/app_constants.dart';
+import 'package:xledge/utils/void_colors.dart';
+import 'package:xledge/utils/void_constants.dart';
 
 class CategoryMeta {
   final Color color;
+  final Color lightColor;
   final IconData icon;
-  const CategoryMeta({required this.color, required this.icon});
+  const CategoryMeta({
+    required this.color,
+    required this.lightColor,
+    required this.icon,
+  });
 }
 
-const _meta = <String, CategoryMeta>{
+const _map = <String, CategoryMeta>{
   ExpenseCategory.food: CategoryMeta(
-    color: Color(0xFFFF6B35),
-    icon: Icons.restaurant_outlined,
+    color: VoidColors.danger,
+    lightColor: VoidColors.dangerLight,
+    icon: Icons.restaurant_rounded,
   ),
   ExpenseCategory.transport: CategoryMeta(
-    color: Color(0xFF00E5FF),
-    icon: Icons.directions_car_outlined,
+    color: VoidColors.teal,
+    lightColor: VoidColors.tealLight,
+    icon: Icons.directions_car_rounded,
   ),
-  ExpenseCategory.housing: CategoryMeta(
-    color: Color(0xFF7B61FF),
-    icon: Icons.home_outlined,
+  ExpenseCategory.shopping: CategoryMeta(
+    color: VoidColors.purple,
+    lightColor: VoidColors.purpleLight,
+    icon: Icons.shopping_bag_rounded,
   ),
   ExpenseCategory.health: CategoryMeta(
-    color: Color(0xFF00FF8C),
-    icon: Icons.favorite_outline,
+    color: VoidColors.success,
+    lightColor: VoidColors.successLight,
+    icon: Icons.favorite_rounded,
+  ),
+  ExpenseCategory.bills: CategoryMeta(
+    color: VoidColors.warning,
+    lightColor: VoidColors.warningLight,
+    icon: Icons.receipt_long_rounded,
   ),
   ExpenseCategory.entertainment: CategoryMeta(
-    color: Color(0xFFFFB800),
-    icon: Icons.sports_esports_outlined,
-  ),
-  ExpenseCategory.utilities: CategoryMeta(
-    color: Color(0xFF4FC3F7),
-    icon: Icons.bolt_outlined,
-  ),
-  ExpenseCategory.clothing: CategoryMeta(
-    color: Color(0xFFFF4081),
-    icon: Icons.checkroom_outlined,
+    color: VoidColors.primary,
+    lightColor: VoidColors.primaryLight,
+    icon: Icons.sports_esports_rounded,
   ),
   ExpenseCategory.education: CategoryMeta(
-    color: Color(0xFF69F0AE),
-    icon: Icons.school_outlined,
+    color: VoidColors.teal,
+    lightColor: VoidColors.tealLight,
+    icon: Icons.school_rounded,
   ),
   ExpenseCategory.other: CategoryMeta(
     color: VoidColors.textSecondary,
-    icon: Icons.category_outlined,
+    lightColor: VoidColors.surfaceVariant,
+    icon: Icons.category_rounded,
   ),
 };
 
 CategoryMeta categoryMeta(String category) =>
-    _meta[category] ??
-    const CategoryMeta(color: VoidColors.textSecondary, icon: Icons.circle);
+    _map[category] ??
+    const CategoryMeta(
+      color: VoidColors.textSecondary,
+      lightColor: VoidColors.surfaceVariant,
+      icon: Icons.circle_outlined,
+    );

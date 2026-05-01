@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import 'package:xledge/utils/app_constants.dart';
-import 'package:xledge/utils/void_theme.dart';
-import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/providers/void_provider.dart';
+import 'package:xledge/utils/void_colors.dart';
+import 'package:xledge/utils/void_constants.dart';
+import 'package:xledge/utils/void_spacing.dart';
+import 'package:xledge/utils/void_text_styles.dart';
+import 'package:xledge/utils/category_utils.dart';
 
 class AddExpenseSheet extends StatefulWidget {
   const AddExpenseSheet({super.key});
@@ -14,11 +15,11 @@ class AddExpenseSheet extends StatefulWidget {
 }
 
 class _AddExpenseSheetState extends State<AddExpenseSheet> {
-  final _titleCtrl = TextEditingController();
+  final _titleCtrl  = TextEditingController();
   final _amountCtrl = TextEditingController();
-  final _noteCtrl = TextEditingController();
-  String _category = ExpenseCategory.food;
-  DateTime _date = DateTime.now();
+  final _noteCtrl   = TextEditingController();
+  String   _category = ExpenseCategory.food;
+  DateTime _date     = DateTime.now();
 
   @override
   void dispose() {
@@ -36,7 +37,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       lastDate: DateTime.now(),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(primary: VoidColors.accent),
+          colorScheme: const ColorScheme.light(primary: VoidColors.primary),
         ),
         child: child!,
       ),
@@ -45,172 +46,140 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   void _submit() {
-    final title = _titleCtrl.text.trim();
+    final title  = _titleCtrl.text.trim();
     final amount = double.tryParse(_amountCtrl.text.trim());
     if (title.isEmpty || amount == null || amount <= 0) return;
-
     context.read<VoidProvider>().addExpense(
-          title: title,
-          amount: amount,
+          title:    title,
+          amount:   amount,
           category: _category,
-          date: _date,
-          note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+          date:     _date,
+          note:     _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
         );
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: VoidColors.surface,
+    return Padding(
       padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'LOG EXPENSE',
-                style: TextStyle(
-                  color: VoidColors.accent,
-                  fontSize: 12,
-                  letterSpacing: 4,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.close, color: VoidColors.textSecondary),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _titleCtrl,
-            style: const TextStyle(color: VoidColors.textPrimary),
-            decoration: const InputDecoration(labelText: 'DESCRIPTION'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _amountCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-              color: VoidColors.accent,
-              fontSize: 18,
-              letterSpacing: 2,
-            ),
-            decoration: const InputDecoration(
-              labelText: 'AMOUNT',
-              prefixText: '₹ ',
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'CATEGORY',
-            style: TextStyle(
-              color: VoidColors.textSecondary,
-              fontSize: 10,
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: ExpenseCategory.all.map((cat) {
-              final meta = categoryMeta(cat);
-              final selected = _category == cat;
-              return GestureDetector(
-                onTap: () => setState(() => _category = cat),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? meta.color.withOpacity(0.15)
-                        : VoidColors.card,
-                    border: Border.all(
-                      color: selected ? meta.color : VoidColors.border,
-                    ),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: Text(
-                    cat,
-                    style: TextStyle(
-                      color: selected ? meta.color : VoidColors.textSecondary,
-                      fontSize: 9,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: _pickDate,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: VoidColors.card,
-                border: Border.all(color: VoidColors.border),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      color: VoidColors.textSecondary, size: 14),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${_date.day.toString().padLeft(2, '0')}.${_date.month.toString().padLeft(2, '0')}.${_date.year}',
-                    style: const TextStyle(
-                      color: VoidColors.textPrimary,
-                      fontSize: 12,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _noteCtrl,
-            style: const TextStyle(color: VoidColors.textPrimary, fontSize: 12),
-            decoration: const InputDecoration(labelText: 'NOTE (OPTIONAL)'),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: VoidColors.accent,
-                foregroundColor: VoidColors.bg,
-                shape: RoundedRectangleBorder(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: VoidColors.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: const Text(
-                'COMMIT',
-                style: TextStyle(
-                  letterSpacing: 4,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+            ),
+            const SizedBox(height: 20),
+            Text('Add Expense', style: VoidTextStyles.titleLarge),
+            const SizedBox(height: VoidSpacing.md),
+            TextField(
+              controller: _titleCtrl,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _amountCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Amount',
+                prefixText: '₹ ',
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Category', style: VoidTextStyles.labelLarge),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ExpenseCategory.all.map((cat) {
+                final meta     = categoryMeta(cat);
+                final selected = _category == cat;
+                return GestureDetector(
+                  onTap: () => setState(() => _category = cat),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected ? meta.color : meta.lightColor,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: selected ? meta.color : VoidColors.outline,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: selected
+                            ? VoidColors.onPrimary
+                            : meta.color,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _pickDate,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: VoidColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: VoidColors.outline),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_outlined,
+                        color: VoidColors.primary, size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${_date.day.toString().padLeft(2, '0')} '
+                      '${_monthName(_date.month)} ${_date.year}',
+                      style: VoidTextStyles.bodyLarge,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _noteCtrl,
+              decoration:
+                  const InputDecoration(labelText: 'Note (optional)'),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _submit,
+              child: const Text('Save Expense'),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+  String _monthName(int m) => const [
+        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ][m];
 }
