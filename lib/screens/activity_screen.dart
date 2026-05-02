@@ -1,13 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/providers/void_provider.dart';
-import 'package:xledge/services/auth_service.dart';
 import 'package:xledge/services/pdf_service.dart';
 import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/void_colors.dart';
-import 'package:xledge/utils/void_spacing.dart';
 import 'package:xledge/utils/void_text_styles.dart';
+import 'package:xledge/widgets/void_card.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -17,80 +17,23 @@ class ActivityScreen extends StatefulWidget {
 }
 
 class _ActivityScreenState extends State<ActivityScreen> {
-  bool _authenticated = false;
-  bool _loading       = true;
-  int  _touchedIndex  = -1;
-
-  @override
-  void initState() {
-    super.initState();
-    _authenticate();
-  }
-
-  Future<void> _authenticate() async {
-    setState(() => _loading = true);
-    final result = await AuthService.authenticate(
-      reason: 'Verify your identity to view Activity Report',
-    );
-    if (mounted) setState(() { _authenticated = result; _loading = false; });
-  }
+  int _touched = -1;
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(
-        backgroundColor: VoidColors.background,
-        body: Center(
-          child: CircularProgressIndicator(color: VoidColors.primary),
-        ),
-      );
-    }
-
-    if (!_authenticated) {
-      return Scaffold(
-        backgroundColor: VoidColors.background,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 80, height: 80,
-                  decoration: const BoxDecoration(
-                    color: VoidColors.primaryLight,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.fingerprint,
-                      color: VoidColors.primary, size: 40),
-                ),
-                const SizedBox(height: 20),
-                const Text('Authentication Required',
-                    style: VoidTextStyles.titleLarge,
-                    textAlign: TextAlign.center),
-                const SizedBox(height: 8),
-                const Text(
-                  'This section is protected.\nVerify your identity to continue.',
-                  style: VoidTextStyles.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton.icon(
-                  onPressed: _authenticate,
-                  icon: const Icon(Icons.fingerprint),
-                  label: const Text('Authenticate'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return Consumer<VoidProvider>(
       builder: (context, provider, _) {
         final analysis = provider.analysis;
         final hasData  = analysis?.hasData ?? false;
+        final now      = DateTime.now();
+
+        final yearlyData = List.generate(now.month, (i) {
+          final m = i + 1;
+          return provider
+              .getAllExpensesForMonth(now.year, m)
+              .where((e) => !e.isAllowance)
+              .fold(0.0, (s, e) => s + e.amount);
+        });
 
         return Scaffold(
           backgroundColor: VoidColors.background,
@@ -99,23 +42,31 @@ class _ActivityScreenState extends State<ActivityScreen> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      VoidSpacing.screenH, 16, VoidSpacing.screenH, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Activity', style: VoidTextStyles.headlineMedium),
-                      IconButton(
-                        onPressed: hasData
-                            ? () => _generatePdf(context, provider)
+                      const Text('Activity',
+                          style: VoidTextStyles.headlineLarge),
+                      GestureDetector(
+                        onTap: hasData
+                            ? () => _exportPdf(context, provider)
                             : null,
-                        icon: const Icon(Icons.picture_as_pdf_rounded),
-                        color: VoidColors.primary,
-                        tooltip: 'Export PDF',
-                        style: IconButton.styleFrom(
-                          backgroundColor: VoidColors.primaryLight,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                        child: Container(
+                          width: 42, height: 42,
+                          decoration: BoxDecoration(
+                            color: hasData
+                                ? VoidColors.primaryLight
+                                : VoidColors.outlineVariant,
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                          child: Icon(
+                            Icons.picture_as_pdf_rounded,
+                            color: hasData
+                                ? VoidColors.primary
+                                : VoidColors.textHint,
+                            size: 18,
+                          ),
                         ),
                       ),
                     ],
@@ -124,64 +75,97 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      VoidSpacing.screenH, 20, VoidSpacing.screenH, 0),
-                  child: _MonthSummaryCard(provider: provider),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _SummaryCard(provider: provider),
+                ),
+              ),
+              if (yearlyData.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+                    child: const Text('This Year',
+                        style: VoidTextStyles.titleLarge),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: VoidCard(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                      child: _YearlyGraph(data: yearlyData),
+                    ),
+                  ),
+                ),
+              ],
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+                  child: const Text('Daily Heatmap',
+                      style: VoidTextStyles.titleLarge),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: VoidCard(
+                    child: _Heatmap(provider: provider),
+                  ),
                 ),
               ),
               if (hasData) ...[
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        VoidSpacing.screenH, 28, VoidSpacing.screenH, 12),
-                    child: Text('Spending Breakdown',
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+                    child: const Text('Breakdown',
                         style: VoidTextStyles.titleLarge),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: VoidSpacing.screenH),
-                    child: _PieChartSection(
-                      analysis: analysis!,
-                      touchedIndex: _touchedIndex,
-                      onTouch: (i) => setState(() => _touchedIndex = i),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: VoidCard(
+                      padding: const EdgeInsets.all(20),
+                      child: SizedBox(
+                        height: 200,
+                        child: _DonutChart(
+                          analysis:  analysis!,
+                          touched:   _touched,
+                          onTouch:   (i) => setState(() => _touched = i),
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        VoidSpacing.screenH, 20, VoidSpacing.screenH, 12),
-                    child: Text('Category Details',
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+                    child: const Text('Categories',
                         style: VoidTextStyles.titleLarge),
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: VoidSpacing.screenH),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (_, i) {
-                        final c = analysis.categoryBreakdown[i];
-                        return _CategoryBar(categoryTotal: c);
-                      },
-                      childCount: analysis.categoryBreakdown.length,
+                      (_, i) => _CatBar(
+                          cat: analysis!.categoryBreakdown[i]),
+                      childCount: analysis!.categoryBreakdown.length,
                     ),
                   ),
                 ),
-                if (analysis.primaryLeak != null)
+                if (analysis!.primaryLeak != null)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                          VoidSpacing.screenH, 20,
-                          VoidSpacing.screenH, 0),
-                      child: _LeakCard(analysis: analysis),
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                      child: _InsightCard(
+                        text: 'Your biggest spend is on '
+                            '${analysis.primaryLeak}. It accounts for '
+                            '${analysis.primaryLeakPercentage!.toStringAsFixed(0)}% of this month.',
+                      ),
                     ),
                   ),
-              ] else
-                SliverFillRemaining(child: _EmptyActivity()),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+              const SliverToBoxAdapter(child: SizedBox(height: 130)),
             ],
           ),
         );
@@ -189,7 +173,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
-  Future<void> _generatePdf(
+  Future<void> _exportPdf(
       BuildContext context, VoidProvider provider) async {
     final analysis = provider.analysis;
     if (analysis == null) return;
@@ -204,292 +188,382 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 }
 
-class _MonthSummaryCard extends StatelessWidget {
+class _SummaryCard extends StatelessWidget {
   final VoidProvider provider;
-  const _MonthSummaryCard({required this.provider});
+  const _SummaryCard({required this.provider});
 
   @override
   Widget build(BuildContext context) {
-    final net      = provider.netBalance;
-    final positive = net >= 0;
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final net = provider.netBalance;
+    final pos = net >= 0;
 
     return Container(
-      padding: const EdgeInsets.all(VoidSpacing.cardInner),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: VoidColors.background,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF9B7EF8), Color(0xFF6C3CE1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: VoidColors.outline, width: 1.5),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _StatBox(
-                  label: 'Total Spent',
-                  value: '₹${(provider.analysis?.totalSpend ?? 0).toStringAsFixed(2)}',
-                  color: VoidColors.danger,
-                  bg: VoidColors.dangerLight,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatBox(
-                  label: 'Allowance',
-                  value: '₹${provider.totalAllowance.toStringAsFixed(2)}',
-                  color: VoidColors.success,
-                  bg: VoidColors.successLight,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: positive
-                  ? VoidColors.successLight
-                  : VoidColors.dangerLight,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  positive
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
-                  color:
-                      positive ? VoidColors.success : VoidColors.danger,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Net Balance: ${positive ? '+' : ''}₹${net.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color:
-                        positive ? VoidColors.success : VoidColors.danger,
-                  ),
-                ),
-              ],
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: VoidColors.primary.withOpacity(0.2),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatBox extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final Color bg;
-
-  const _StatBox({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.bg,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: VoidColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              )),
-          const SizedBox(height: 4),
-          Text(value,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: color,
-                letterSpacing: -0.5,
-              )),
+          Text(
+            '${months[provider.selectedMonth]} ${provider.selectedYear}',
+            style: const TextStyle(
+              fontSize: 11, fontWeight: FontWeight.w500,
+              color: Colors.white60, letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _SumItem(
+                  label: 'Spent',
+                  value: '₹${(provider.analysis?.totalSpend ?? 0).toStringAsFixed(0)}',
+                ),
+              ),
+              Expanded(
+                child: _SumItem(
+                  label: 'Received',
+                  value: '₹${provider.totalAllowance.toStringAsFixed(0)}',
+                ),
+              ),
+              Expanded(
+                child: _SumItem(
+                  label: 'Net',
+                  value: '${pos ? '+' : ''}₹${net.abs().toStringAsFixed(0)}',
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _PieChartSection extends StatelessWidget {
+class _SumItem extends StatelessWidget {
+  final String label;
+  final String value;
+  const _SumItem({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+              fontSize: 11, color: Colors.white54,
+              fontWeight: FontWeight.w400,
+            )),
+        const SizedBox(height: 4),
+        Text(value,
+            style: const TextStyle(
+              fontSize: 18, fontWeight: FontWeight.w700,
+              color: Colors.white, letterSpacing: -0.5,
+            )),
+      ],
+    );
+  }
+}
+
+class _YearlyGraph extends StatelessWidget {
+  final List<double> data;
+  const _YearlyGraph({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    final max    = data.isEmpty ? 1.0 : data.reduce((a, b) => a > b ? a : b);
+
+    return SizedBox(
+      height: 160,
+      child: LineChart(
+        LineChartData(
+          minY: 0,
+          maxY: max * 1.25,
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: max > 0 ? max / 3 : 1,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: VoidColors.outline,
+              strokeWidth: 1,
+              dashArray: [4, 4],
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(
+            rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false)),
+            leftTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 1,
+                getTitlesWidget: (v, _) {
+                  final i = v.toInt();
+                  if (i < 0 || i >= labels.length) return const SizedBox();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(labels[i],
+                        style: VoidTextStyles.labelSmall),
+                  );
+                },
+              ),
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: data
+                  .asMap()
+                  .entries
+                  .map((e) => FlSpot(e.key.toDouble(), e.value))
+                  .toList(),
+              isCurved: true,
+              curveSmoothness: 0.35,
+              color: VoidColors.primary,
+              barWidth: 2.5,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (_, __, ___, ____) =>
+                    FlDotCirclePainter(
+                  radius: 3,
+                  color: VoidColors.primary,
+                  strokeWidth: 2,
+                  strokeColor: Colors.white,
+                ),
+              ),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    VoidColors.primary.withOpacity(0.15),
+                    VoidColors.primary.withOpacity(0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+  }
+}
+
+class _Heatmap extends StatelessWidget {
+  final VoidProvider provider;
+  const _Heatmap({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final now       = DateTime.now();
+    final daysInMonth =
+        DateUtils.getDaysInMonth(now.year, now.month);
+    final firstDay =
+        DateTime(now.year, now.month, 1).weekday % 7;
+
+    final dailyAmounts = <int, double>{};
+    final expenses = provider.getAllExpensesForMonth(now.year, now.month)
+        .where((e) => !e.isAllowance);
+    for (final e in expenses) {
+      dailyAmounts[e.date.day] =
+          (dailyAmounts[e.date.day] ?? 0) + e.amount;
+    }
+
+    final maxAmt = dailyAmounts.values.isEmpty
+        ? 1.0
+        : dailyAmounts.values.reduce((a, b) => a > b ? a : b);
+
+    const headers = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: headers
+              .map((h) => SizedBox(
+                    width: 30,
+                    child: Text(h,
+                        style: VoidTextStyles.labelSmall,
+                        textAlign: TextAlign.center),
+                  ))
+              .toList(),
+        ),
+        const SizedBox(height: 6),
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+          ),
+          itemCount: firstDay + daysInMonth,
+          itemBuilder: (_, i) {
+            if (i < firstDay) return const SizedBox.shrink();
+            final day  = i - firstDay + 1;
+            final amt  = dailyAmounts[day] ?? 0;
+            final intensity = amt > 0 ? (amt / maxAmt).clamp(0.1, 1.0) : 0.0;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: intensity > 0
+                    ? VoidColors.primary.withOpacity(intensity * 0.75)
+                    : VoidColors.outlineVariant,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: Text('$day',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                    color: intensity > 0.5
+                        ? Colors.white
+                        : VoidColors.textHint,
+                  )),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _DonutChart extends StatelessWidget {
   final dynamic analysis;
-  final int touchedIndex;
+  final int touched;
   final ValueChanged<int> onTouch;
 
-  const _PieChartSection({
+  const _DonutChart({
     required this.analysis,
-    required this.touchedIndex,
+    required this.touched,
     required this.onTouch,
   });
 
   @override
   Widget build(BuildContext context) {
     final sections = <PieChartSectionData>[];
+    final purples = [
+      const Color(0xFF7C5CFC),
+      const Color(0xFF9B7EF8),
+      const Color(0xFFB49BFB),
+      const Color(0xFFCDBCFC),
+      const Color(0xFFD8CFFF),
+      const Color(0xFF5B3FD4),
+      const Color(0xFF3D2B9E),
+      const Color(0xFF6C3CE1),
+    ];
+
     for (int i = 0; i < analysis.categoryBreakdown.length; i++) {
-      final c      = analysis.categoryBreakdown[i];
-      final meta   = categoryMeta(c.category);
-      final touched = i == touchedIndex;
+      final c       = analysis.categoryBreakdown[i];
+      final isTouched = i == touched;
       sections.add(PieChartSectionData(
-        value:     c.percentage,
-        color:     meta.color,
-        radius:    touched ? 70 : 56,
-        title:     touched ? '${c.percentage.toStringAsFixed(1)}%' : '',
+        value:  c.percentage,
+        color:  purples[i % purples.length],
+        radius: isTouched ? 64 : 50,
+        title:  isTouched
+            ? '${c.percentage.toStringAsFixed(0)}%'
+            : '',
         titleStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
+          fontSize: 12, fontWeight: FontWeight.w700,
           color: Colors.white,
         ),
       ));
     }
 
-    return Container(
-      height: 220,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: VoidColors.background,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: VoidColors.outline, width: 1.5),
-      ),
-      child: PieChart(
-        PieChartData(
-          sections:           sections,
-          centerSpaceRadius:  48,
-          sectionsSpace:      2,
-          pieTouchData: PieTouchData(
-            touchCallback: (event, response) {
-              if (!event.isInterestedForInteractions ||
-                  response == null ||
-                  response.touchedSection == null) {
-                onTouch(-1);
-                return;
-              }
-              onTouch(response.touchedSection!.touchedSectionIndex);
-            },
-          ),
+    return PieChart(
+      PieChartData(
+        sections:          sections,
+        centerSpaceRadius: 50,
+        sectionsSpace:     2,
+        pieTouchData: PieTouchData(
+          touchCallback: (e, r) {
+            if (!e.isInterestedForInteractions ||
+                r?.touchedSection == null) {
+              onTouch(-1);
+              return;
+            }
+            onTouch(r!.touchedSection!.touchedSectionIndex);
+          },
         ),
       ),
+      duration: const Duration(milliseconds: 300),
     );
   }
 }
 
-class _CategoryBar extends StatelessWidget {
-  final dynamic categoryTotal;
-  const _CategoryBar({required this.categoryTotal});
+class _CatBar extends StatelessWidget {
+  final dynamic cat;
+  const _CatBar({required this.cat});
 
   @override
   Widget build(BuildContext context) {
-    final meta = categoryMeta(categoryTotal.category);
+    final meta = categoryMeta(cat.category);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 32, height: 32,
-                    decoration: BoxDecoration(
-                        color: meta.lightColor, shape: BoxShape.circle),
-                    child: Icon(meta.icon, color: meta.color, size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(categoryTotal.category,
-                      style: VoidTextStyles.titleMedium),
-                ],
-              ),
-              Text(
-                '₹${categoryTotal.total.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: meta.color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: LinearProgressIndicator(
-              value:            categoryTotal.percentage / 100,
-              minHeight:        6,
-              backgroundColor:  meta.lightColor,
-              valueColor:       AlwaysStoppedAnimation(meta.color),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${categoryTotal.percentage.toStringAsFixed(1)}% of total',
-            style: VoidTextStyles.labelSmall,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LeakCard extends StatelessWidget {
-  final dynamic analysis;
-  const _LeakCard({required this.analysis});
-
-  @override
-  Widget build(BuildContext context) {
-    final meta = categoryMeta(analysis.primaryLeak!);
-    return Container(
-      padding: const EdgeInsets.all(VoidSpacing.cardInner),
-      decoration: BoxDecoration(
-        color: meta.lightColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: meta.color.withOpacity(0.3)),
-      ),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
           Container(
-            width: 52, height: 52,
+            width: 36, height: 36,
             decoration: BoxDecoration(
-                color: meta.color.withOpacity(0.15),
-                shape: BoxShape.circle),
-            child: Icon(meta.icon, color: meta.color, size: 26),
+              color: VoidColors.iconBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(meta.icon, color: VoidColors.iconColor, size: 18),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Primary Spending Leak',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: VoidColors.textSecondary,
-                    )),
-                const SizedBox(height: 2),
-                Text(analysis.primaryLeak!,
-                    style: VoidTextStyles.titleMedium),
-                Text(
-                  '₹${analysis.primaryLeakAmount!.toStringAsFixed(2)} · '
-                  '${analysis.primaryLeakPercentage!.toStringAsFixed(1)}% of spend',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: meta.color,
-                    fontWeight: FontWeight.w600,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(cat.category, style: VoidTextStyles.titleMedium),
+                    Text('₹${cat.total.toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: VoidColors.primary,
+                          letterSpacing: -0.2,
+                        )),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: LinearProgressIndicator(
+                    value: cat.percentage / 100,
+                    minHeight: 4,
+                    backgroundColor: VoidColors.outlineVariant,
+                    valueColor: const AlwaysStoppedAnimation(
+                        VoidColors.primary),
                   ),
                 ),
               ],
@@ -501,25 +575,35 @@ class _LeakCard extends StatelessWidget {
   }
 }
 
-class _EmptyActivity extends StatelessWidget {
+class _InsightCard extends StatelessWidget {
+  final String text;
+  const _InsightCard({required this.text});
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 72, height: 72,
-          decoration: const BoxDecoration(
-              color: VoidColors.primaryLight, shape: BoxShape.circle),
-          child: const Icon(Icons.bar_chart_rounded,
-              color: VoidColors.primary, size: 32),
-        ),
-        const SizedBox(height: 16),
-        const Text('No data this month', style: VoidTextStyles.titleMedium),
-        const SizedBox(height: 6),
-        const Text('Add expenses to see your breakdown',
-            style: VoidTextStyles.bodyMedium),
-      ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: VoidColors.primaryLight,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.lightbulb_outline_rounded,
+              color: VoidColors.primary, size: 18),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(text,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: VoidColors.primary,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                )),
+          ),
+        ],
+      ),
     );
   }
 }

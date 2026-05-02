@@ -15,28 +15,28 @@ class CategoryMeta {
 
 const _map = <String, CategoryMeta>{
   ExpenseCategory.food: CategoryMeta(
-    color: VoidColors.danger,
-    lightColor: VoidColors.dangerLight,
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
     icon: Icons.restaurant_rounded,
   ),
   ExpenseCategory.transport: CategoryMeta(
-    color: VoidColors.teal,
-    lightColor: VoidColors.tealLight,
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
     icon: Icons.directions_car_rounded,
   ),
   ExpenseCategory.shopping: CategoryMeta(
-    color: VoidColors.purple,
-    lightColor: VoidColors.purpleLight,
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
     icon: Icons.shopping_bag_rounded,
   ),
   ExpenseCategory.health: CategoryMeta(
-    color: VoidColors.success,
-    lightColor: VoidColors.successLight,
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
     icon: Icons.favorite_rounded,
   ),
   ExpenseCategory.bills: CategoryMeta(
-    color: VoidColors.warning,
-    lightColor: VoidColors.warningLight,
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
     icon: Icons.receipt_long_rounded,
   ),
   ExpenseCategory.entertainment: CategoryMeta(
@@ -45,13 +45,13 @@ const _map = <String, CategoryMeta>{
     icon: Icons.sports_esports_rounded,
   ),
   ExpenseCategory.education: CategoryMeta(
-    color: VoidColors.teal,
-    lightColor: VoidColors.tealLight,
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
     icon: Icons.school_rounded,
   ),
   ExpenseCategory.other: CategoryMeta(
-    color: VoidColors.textSecondary,
-    lightColor: VoidColors.surfaceVariant,
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
     icon: Icons.category_rounded,
   ),
 };
@@ -59,7 +59,7 @@ const _map = <String, CategoryMeta>{
 CategoryMeta categoryMeta(String category) =>
     _map[category] ??
     const CategoryMeta(
-      color: VoidColors.textSecondary,
-      lightColor: VoidColors.surfaceVariant,
+      color: VoidColors.iconColor,
+      lightColor: VoidColors.iconBg,
       icon: Icons.circle_outlined,
     );

@@ -1,54 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/void_colors.dart';
+import 'package:xledge/utils/void_text_styles.dart';
 
 class TransactionTile extends StatelessWidget {
   final Expense expense;
   final VoidCallback? onDismiss;
+  final VoidCallback? onEdit;
 
   const TransactionTile({
     super.key,
     required this.expense,
     this.onDismiss,
+    this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
-    final meta      = categoryMeta(expense.category);
-    final isAllow   = expense.isAllowance;
-    final amtColor  = isAllow ? VoidColors.success : VoidColors.danger;
-    final amtPrefix = isAllow ? '+' : '-';
+    final meta    = categoryMeta(expense.category);
+    final isAllow = expense.isAllowance;
+    final color   = isAllow ? VoidColors.success : VoidColors.danger;
+    final prefix  = isAllow ? '+' : '-';
 
     return Dismissible(
       key: Key(expense.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: VoidColors.dangerLight,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline_rounded,
-            color: VoidColors.danger),
+      background: _swipeBg(
+        color: VoidColors.primary,
+        icon: Icons.edit_rounded,
+        alignment: Alignment.centerLeft,
       ),
-      onDismissed: (_) => onDismiss?.call(),
+      secondaryBackground: _swipeBg(
+        color: VoidColors.danger,
+        icon: Icons.delete_rounded,
+        alignment: Alignment.centerRight,
+      ),
+      confirmDismiss: (dir) async {
+        HapticFeedback.mediumImpact();
+        if (dir == DismissDirection.endToStart) {
+          return await _confirmDelete(context);
+        }
+        onEdit?.call();
+        return false;
+      },
+      onDismissed: (dir) {
+        if (dir == DismissDirection.endToStart) onDismiss?.call();
+      },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
             Container(
-              width: 46,
-              height: 46,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: isAllow ? VoidColors.successLight : meta.lightColor,
-                shape: BoxShape.circle,
+                color: isAllow
+                    ? VoidColors.primaryLight
+                    : VoidColors.iconBg,
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 isAllow ? Icons.savings_rounded : meta.icon,
-                color: isAllow ? VoidColors.success : meta.color,
-                size: 22,
+                color: isAllow ? VoidColors.primary : VoidColors.iconColor,
+                size: 20,
               ),
             ),
             const SizedBox(width: 14),
@@ -58,30 +73,25 @@ class TransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     expense.title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: VoidColors.textPrimary,
-                      letterSpacing: -0.1,
-                    ),
+                    style: VoidTextStyles.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Text(
-                    isAllow ? 'Allowance · ${_fmtDate(expense.date)}' : _fmtDate(expense.date),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: VoidColors.textSecondary,
-                    ),
+                    _smartDate(expense.date),
+                    style: VoidTextStyles.labelSmall,
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
             Text(
-              '$amtPrefix₹${expense.amount.toStringAsFixed(2)}',
+              '$prefix₹${expense.amount.toStringAsFixed(0)}',
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: amtColor,
+                fontWeight: FontWeight.w600,
+                color: color,
                 letterSpacing: -0.3,
               ),
             ),
@@ -91,9 +101,60 @@ class TransactionTile extends StatelessWidget {
     );
   }
 
-  String _fmtDate(DateTime d) {
-    const m = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${d.day.toString().padLeft(2, '0')} ${m[d.month]}';
+  Widget _swipeBg({
+    required Color color,
+    required IconData icon,
+    required Alignment alignment,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Icon(icon, color: color, size: 20),
+    );
+  }
+
+  Future<bool> _confirmDelete(BuildContext context) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Delete?', style: VoidTextStyles.titleLarge),
+            content: const Text('This cannot be undone.',
+                style: VoidTextStyles.bodyMedium),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel',
+                    style: TextStyle(color: VoidColors.textSecondary)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Delete',
+                    style: TextStyle(
+                        color: VoidColors.danger,
+                        fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  String _smartDate(DateTime d) {
+    final now   = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final date  = DateTime(d.year, d.month, d.day);
+    final diff  = today.difference(date).inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    const m = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${d.day} ${m[d.month]}';
   }
 }

@@ -1,33 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/providers/void_provider.dart';
 import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_constants.dart';
-import 'package:xledge/utils/void_spacing.dart';
 import 'package:xledge/utils/void_text_styles.dart';
 
 class AddExpenseSheet extends StatefulWidget {
-  const AddExpenseSheet({super.key});
+  final Expense? existingExpense;
+
+  const AddExpenseSheet({super.key, this.existingExpense});
 
   @override
   State<AddExpenseSheet> createState() => _AddExpenseSheetState();
 }
 
 class _AddExpenseSheetState extends State<AddExpenseSheet> {
-  final _titleCtrl  = TextEditingController();
-  final _amountCtrl = TextEditingController();
-  final _noteCtrl   = TextEditingController();
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _amountCtrl;
+  late String   _category;
+  late DateTime _date;
+  late bool     _isAllowance;
 
-  String   _category    = ExpenseCategory.food;
-  DateTime _date        = DateTime.now();
-  bool     _isAllowance = false;
+  bool get _isEditing => widget.existingExpense != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existingExpense;
+    _titleCtrl   = TextEditingController(text: e?.title ?? '');
+    _amountCtrl  = TextEditingController(
+        text: e != null ? e.amount.toStringAsFixed(0) : '');
+    _category    = e?.category ?? ExpenseCategory.food;
+    _date        = e?.date ?? DateTime.now();
+    _isAllowance = e?.isAllowance ?? false;
+  }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _amountCtrl.dispose();
-    _noteCtrl.dispose();
     super.dispose();
   }
 
@@ -53,14 +66,19 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     final amount = double.tryParse(_amountCtrl.text.trim());
     if (title.isEmpty || amount == null || amount <= 0) return;
 
-    context.read<VoidProvider>().addExpense(
-          title:       title,
-          amount:      amount,
-          category:    _isAllowance ? 'Allowance' : _category,
-          date:        _date,
-          note:        _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
-          isAllowance: _isAllowance,
-        );
+    final provider = context.read<VoidProvider>();
+
+    if (_isEditing) {
+      provider.deleteExpense(widget.existingExpense!.id);
+    }
+
+    provider.addExpense(
+      title:       title,
+      amount:      amount,
+      category:    _isAllowance ? 'Allowance' : _category,
+      date:        _date,
+      isAllowance: _isAllowance,
+    );
     Navigator.pop(context);
   }
 
@@ -70,8 +88,12 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        decoration: const BoxDecoration(
+          color: VoidColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
         child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,80 +101,84 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
               Center(
                 child: Container(
                   width: 40, height: 4,
+                  margin: const EdgeInsets.only(bottom: 24),
                   decoration: BoxDecoration(
                     color: VoidColors.outline,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    _isAllowance ? 'Add Allowance' : 'Add Expense',
-                    style: VoidTextStyles.titleLarge,
-                  ),
+                  Text(_isEditing ? 'Edit Record' : 'New Record',
+                      style: VoidTextStyles.headlineMedium),
                   _TypeToggle(
                     isAllowance: _isAllowance,
                     onChanged: (v) => setState(() => _isAllowance = v),
                   ),
                 ],
               ),
-              const SizedBox(height: VoidSpacing.md),
+              const SizedBox(height: 24),
+              _FieldLabel('Item Name'),
+              const SizedBox(height: 8),
               TextField(
                 controller: _titleCtrl,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(labelText: 'Item Name'),
+                style: VoidTextStyles.bodyLarge,
+                decoration: const InputDecoration(
+                  hintText: '',
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              _FieldLabel('Amount'),
+              const SizedBox(height: 8),
               TextField(
                 controller: _amountCtrl,
-                keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: VoidColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
                 decoration: const InputDecoration(
-                  labelText: 'Amount',
                   prefixText: '₹ ',
+                  hintText: '',
                 ),
               ),
               if (!_isAllowance) ...[
-                const SizedBox(height: 16),
-                Text('Category', style: VoidTextStyles.labelLarge),
-                const SizedBox(height: 10),
-                _CategoryGrid(
+                const SizedBox(height: 20),
+                _FieldLabel('Category'),
+                const SizedBox(height: 12),
+                _CategoryPicker(
                   selected: _category,
                   onSelect: (c) => setState(() => _category = c),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               GestureDetector(
                 onTap: _pickDate,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                      horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
-                    color: VoidColors.surface,
+                    color: VoidColors.outlineVariant,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: VoidColors.outline),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined,
+                      const Icon(Icons.calendar_today_rounded,
                           color: VoidColors.primary, size: 18),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Text(_fmtDate(_date),
                           style: VoidTextStyles.bodyLarge),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _noteCtrl,
-                decoration: const InputDecoration(
-                    labelText: 'Note (optional)'),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               ElevatedButton(
                 onPressed: _submit,
                 style: ElevatedButton.styleFrom(
@@ -160,8 +186,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                       ? VoidColors.success
                       : VoidColors.primary,
                 ),
-                child: Text(
-                    _isAllowance ? 'Save Allowance' : 'Save Expense'),
+                child: Text(_isEditing
+                    ? 'Update Record'
+                    : (_isAllowance ? 'Save Allowance' : 'Save Expense')),
               ),
             ],
           ),
@@ -171,9 +198,21 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   String _fmtDate(DateTime d) {
-    const m = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${d.day.toString().padLeft(2, '0')} ${m[d.month]} ${d.year}';
+    const m = ['','Jan','Feb','Mar','Apr','May','Jun',
+                'Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${d.day} ${m[d.month]} ${d.year}';
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  const _FieldLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(text,
+        style: VoidTextStyles.labelLarge
+            .copyWith(color: VoidColors.textSecondary));
   }
 }
 
@@ -186,26 +225,22 @@ class _TypeToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: VoidColors.surface,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: VoidColors.outline),
+        color: VoidColors.outlineVariant,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _Pill(
-            label: 'Expense',
-            active: !isAllowance,
-            color: VoidColors.danger,
-            onTap: () => onChanged(false),
-          ),
-          _Pill(
-            label: 'Allowance',
-            active: isAllowance,
-            color: VoidColors.success,
-            onTap: () => onChanged(true),
-          ),
+          _Pill(label: 'Expense',
+              active: !isAllowance,
+              color: VoidColors.danger,
+              onTap: () => onChanged(false)),
+          _Pill(label: 'Allow',
+              active: isAllowance,
+              color: VoidColors.success,
+              onTap: () => onChanged(true)),
         ],
       ),
     );
@@ -231,75 +266,63 @@ class _Pill extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active ? color : Colors.transparent,
-          borderRadius: BorderRadius.circular(100),
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: active ? Colors.white : VoidColors.textSecondary,
-          ),
-        ),
+        child: Text(label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: active ? Colors.white : VoidColors.textSecondary,
+            )),
       ),
     );
   }
 }
 
-class _CategoryGrid extends StatelessWidget {
+class _CategoryPicker extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onSelect;
 
-  const _CategoryGrid({required this.selected, required this.onSelect});
+  const _CategoryPicker({required this.selected, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 8, runSpacing: 8,
       children: ExpenseCategory.all.map((cat) {
-        final meta     = categoryMeta(cat);
-        final isActive = selected == cat;
+        final meta   = categoryMeta(cat);
+        final active = selected == cat;
         return GestureDetector(
           onTap: () => onSelect(cat),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 4, vertical: 8),
-            width: 64,
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+            width: 66,
             decoration: BoxDecoration(
-              color: isActive ? meta.lightColor : VoidColors.surface,
+              color: active ? meta.lightColor : VoidColors.outlineVariant,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isActive ? meta.color : VoidColors.outline,
+                color: active ? meta.color : Colors.transparent,
                 width: 1.5,
               ),
             ),
             child: Column(
               children: [
                 Icon(meta.icon,
-                    color: isActive
-                        ? meta.color
-                        : VoidColors.textSecondary,
-                    size: 24),
-                const SizedBox(height: 4),
-                Text(
-                  cat,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    color: isActive
-                        ? meta.color
-                        : VoidColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                    color: active ? meta.color : VoidColors.textHint,
+                    size: 22),
+                const SizedBox(height: 5),
+                Text(cat,
+                    style: TextStyle(
+                      fontSize: 9, fontWeight: FontWeight.w600,
+                      color: active ? meta.color : VoidColors.textHint,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
               ],
             ),
           ),

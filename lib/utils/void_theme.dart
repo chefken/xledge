@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xledge/utils/void_colors.dart';
-import 'package:xledge/utils/void_radius.dart';
 import 'package:xledge/utils/void_text_styles.dart';
 
 class VoidTheme {
@@ -14,16 +13,14 @@ class VoidTheme {
     colorScheme: const ColorScheme.light(
       primary:        VoidColors.primary,
       onPrimary:      VoidColors.onPrimary,
-      secondary:      VoidColors.primary,
-      onSecondary:    VoidColors.onPrimary,
+      secondary:      VoidColors.primaryMid,
       surface:        VoidColors.surface,
       onSurface:      VoidColors.textPrimary,
       outline:        VoidColors.outline,
-      outlineVariant: VoidColors.outlineVariant,
-      error:          VoidColors.danger,
     ),
     textTheme: const TextTheme(
       displayLarge:   VoidTextStyles.displayLarge,
+      headlineLarge:  VoidTextStyles.headlineLarge,
       headlineMedium: VoidTextStyles.headlineMedium,
       titleLarge:     VoidTextStyles.titleLarge,
       titleMedium:    VoidTextStyles.titleMedium,
@@ -36,43 +33,31 @@ class VoidTheme {
       backgroundColor: VoidColors.background,
       foregroundColor: VoidColors.textPrimary,
       elevation: 0,
-      scrolledUnderElevation: 0.5,
-      shadowColor: VoidColors.outline,
+      scrolledUnderElevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
       ),
     ),
-    cardTheme: CardThemeData(
-      color: VoidColors.background,
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: VoidRadius.card,
-        side: const BorderSide(color: VoidColors.outline, width: 1.5),
-      ),
-    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: VoidColors.surface,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      fillColor: VoidColors.outlineVariant,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: VoidRadius.input,
-        borderSide: const BorderSide(color: VoidColors.outline),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: VoidRadius.input,
-        borderSide: const BorderSide(color: VoidColors.outline),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: VoidRadius.input,
-        borderSide: const BorderSide(color: VoidColors.primary, width: 2),
+        borderRadius: BorderRadius.circular(16),
+        borderSide:
+            const BorderSide(color: VoidColors.primary, width: 1.5),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: VoidRadius.input,
-        borderSide: const BorderSide(color: VoidColors.danger),
-      ),
-      labelStyle: VoidTextStyles.labelLarge,
+      labelStyle: VoidTextStyles.bodyMedium,
       hintStyle: VoidTextStyles.bodyMedium,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -80,51 +65,28 @@ class VoidTheme {
         backgroundColor: VoidColors.primary,
         foregroundColor: VoidColors.onPrimary,
         elevation: 0,
-        minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(borderRadius: VoidRadius.button),
-        textStyle: VoidTextStyles.titleMedium,
+        minimumSize: const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18)),
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+        ),
       ),
     ),
-    floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: VoidColors.primary,
-      foregroundColor: VoidColors.onPrimary,
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: VoidRadius.button),
-      extendedTextStyle: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: VoidColors.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      extendedPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-    ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: VoidColors.background,
-      selectedItemColor: VoidColors.primary,
-      unselectedItemColor: VoidColors.textSecondary,
-      elevation: 0,
-      type: BottomNavigationBarType.fixed,
-    ),
-    dividerTheme: const DividerThemeData(
-      color: VoidColors.outline,
-      thickness: 1,
-      space: 1,
-    ),
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: VoidColors.background,
-      shape: RoundedRectangleBorder(borderRadius: VoidRadius.sheet),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: VoidColors.background,
+      backgroundColor: VoidColors.surface,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: VoidRadius.dialog),
-    ),
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: VoidColors.textPrimary,
-      contentTextStyle: VoidTextStyles.bodyMedium.copyWith(
-        color: VoidColors.background,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: VoidRadius.dialog),
-      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24)),
     ),
   );
 }
