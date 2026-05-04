@@ -17,42 +17,42 @@ const _map = <String, CategoryMeta>{
   ExpenseCategory.food: CategoryMeta(
     color: VoidColors.iconColor,
     lightColor: VoidColors.iconBg,
-    icon: Icons.restaurant_rounded,
+    icon: Icons.restaurant_outlined,
   ),
   ExpenseCategory.transport: CategoryMeta(
     color: VoidColors.iconColor,
     lightColor: VoidColors.iconBg,
-    icon: Icons.directions_car_rounded,
+    icon: Icons.directions_car_outlined,
   ),
   ExpenseCategory.shopping: CategoryMeta(
     color: VoidColors.iconColor,
     lightColor: VoidColors.iconBg,
-    icon: Icons.shopping_bag_rounded,
-  ),
-  ExpenseCategory.health: CategoryMeta(
-    color: VoidColors.iconColor,
-    lightColor: VoidColors.iconBg,
-    icon: Icons.favorite_rounded,
+    icon: Icons.shopping_bag_outlined,
   ),
   ExpenseCategory.bills: CategoryMeta(
     color: VoidColors.iconColor,
     lightColor: VoidColors.iconBg,
-    icon: Icons.receipt_long_rounded,
+    icon: Icons.receipt_long_outlined,
+  ),
+  ExpenseCategory.health: CategoryMeta(
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
+    icon: Icons.favorite_outline,
+  ),
+  ExpenseCategory.gym: CategoryMeta(
+    color: VoidColors.iconColor,
+    lightColor: VoidColors.iconBg,
+    icon: Icons.fitness_center_outlined,
   ),
   ExpenseCategory.entertainment: CategoryMeta(
     color: VoidColors.primary,
     lightColor: VoidColors.primaryLight,
-    icon: Icons.sports_esports_rounded,
-  ),
-  ExpenseCategory.education: CategoryMeta(
-    color: VoidColors.iconColor,
-    lightColor: VoidColors.iconBg,
-    icon: Icons.school_rounded,
+    icon: Icons.movie_outlined,
   ),
   ExpenseCategory.other: CategoryMeta(
     color: VoidColors.iconColor,
     lightColor: VoidColors.iconBg,
-    icon: Icons.category_rounded,
+    icon: Icons.more_horiz_rounded,
   ),
 };
 

@@ -21,8 +21,6 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final meta    = categoryMeta(expense.category);
     final isAllow = expense.isAllowance;
-    final color   = isAllow ? VoidColors.success : VoidColors.danger;
-    final prefix  = isAllow ? '+' : '-';
 
     return Dismissible(
       key: Key(expense.id),
@@ -32,12 +30,12 @@ class TransactionTile extends StatelessWidget {
         alignment: Alignment.centerLeft,
       ),
       secondaryBackground: _swipeBg(
-        color: VoidColors.danger,
-        icon: Icons.delete_rounded,
+        color: VoidColors.textSecondary,
+        icon: Icons.delete_outlined,
         alignment: Alignment.centerRight,
       ),
       confirmDismiss: (dir) async {
-        HapticFeedback.mediumImpact();
+        HapticFeedback.lightImpact();
         if (dir == DismissDirection.endToStart) {
           return await _confirmDelete(context);
         }
@@ -48,22 +46,24 @@ class TransactionTile extends StatelessWidget {
         if (dir == DismissDirection.endToStart) onDismiss?.call();
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 9),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: isAllow
                     ? VoidColors.primaryLight
                     : VoidColors.iconBg,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(
-                isAllow ? Icons.savings_rounded : meta.icon,
-                color: isAllow ? VoidColors.primary : VoidColors.iconColor,
-                size: 20,
+                isAllow ? Icons.savings_outlined : meta.icon,
+                color: isAllow
+                    ? VoidColors.primary
+                    : VoidColors.iconColor,
+                size: 18,
               ),
             ),
             const SizedBox(width: 14),
@@ -73,25 +73,36 @@ class TransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     expense.title,
-                    style: VoidTextStyles.titleMedium,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: VoidColors.textPrimary,
+                      letterSpacing: -0.1,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 3),
                   Text(
                     _smartDate(expense.date),
-                    style: VoidTextStyles.labelSmall,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: VoidColors.textHint,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 12),
             Text(
-              '$prefix₹${expense.amount.toStringAsFixed(0)}',
+              '${isAllow ? '+' : '-'}₹${expense.amount.toStringAsFixed(0)}',
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: isAllow
+                    ? VoidColors.primary
+                    : VoidColors.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
@@ -107,14 +118,14 @@ class TransactionTile extends StatelessWidget {
     required Alignment alignment,
   }) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 9),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(13),
       ),
       alignment: alignment,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Icon(icon, color: color, size: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Icon(icon, color: color, size: 18),
     );
   }
 
@@ -122,21 +133,26 @@ class TransactionTile extends StatelessWidget {
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Delete?', style: VoidTextStyles.titleLarge),
-            content: const Text('This cannot be undone.',
-                style: VoidTextStyles.bodyMedium),
+            title: const Text('Delete record?',
+                style: VoidTextStyles.titleLarge),
+            content: const Text(
+              'This action cannot be undone.',
+              style: VoidTextStyles.bodyMedium,
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: const Text('Cancel',
-                    style: TextStyle(color: VoidColors.textSecondary)),
+                    style:
+                        TextStyle(color: VoidColors.textSecondary)),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('Delete',
                     style: TextStyle(
-                        color: VoidColors.danger,
-                        fontWeight: FontWeight.w700)),
+                      color: VoidColors.danger,
+                      fontWeight: FontWeight.w600,
+                    )),
               ),
             ],
           ),

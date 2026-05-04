@@ -9,38 +9,52 @@ import 'package:xledge/utils/void_text_styles.dart';
 
 class AddExpenseSheet extends StatefulWidget {
   final Expense? existingExpense;
-
   const AddExpenseSheet({super.key, this.existingExpense});
 
   @override
   State<AddExpenseSheet> createState() => _AddExpenseSheetState();
 }
 
-class _AddExpenseSheetState extends State<AddExpenseSheet> {
+class _AddExpenseSheetState extends State<AddExpenseSheet>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _titleCtrl;
   late final TextEditingController _amountCtrl;
   late String   _category;
   late DateTime _date;
   late bool     _isAllowance;
 
+  late final AnimationController _slideCtrl;
+  late final Animation<Offset>   _slide;
+  late final Animation<double>   _fade;
+
   bool get _isEditing => widget.existingExpense != null;
 
   @override
   void initState() {
     super.initState();
-    final e = widget.existingExpense;
+    final e      = widget.existingExpense;
     _titleCtrl   = TextEditingController(text: e?.title ?? '');
     _amountCtrl  = TextEditingController(
         text: e != null ? e.amount.toStringAsFixed(0) : '');
     _category    = e?.category ?? ExpenseCategory.food;
     _date        = e?.date ?? DateTime.now();
     _isAllowance = e?.isAllowance ?? false;
+
+    _slideCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 340),
+    )..forward();
+    _slide = Tween(begin: const Offset(0, 0.08), end: Offset.zero).animate(
+      CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutCubic),
+    );
+    _fade = CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOut);
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _amountCtrl.dispose();
+    _slideCtrl.dispose();
     super.dispose();
   }
 
@@ -52,8 +66,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       lastDate: DateTime.now(),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme:
-              const ColorScheme.light(primary: VoidColors.primary),
+          colorScheme: const ColorScheme.light(
+            primary: VoidColors.primary,
+          ),
         ),
         child: child!,
       ),
@@ -67,10 +82,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     if (title.isEmpty || amount == null || amount <= 0) return;
 
     final provider = context.read<VoidProvider>();
-
-    if (_isEditing) {
-      provider.deleteExpense(widget.existingExpense!.id);
-    }
+    if (_isEditing) provider.deleteExpense(widget.existingExpense!.id);
 
     provider.addExpense(
       title:       title,
@@ -84,113 +96,135 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: VoidColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: VoidColors.outline,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: VoidColors.surface,
+              borderRadius:
+                  BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 14, 24, 40),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_isEditing ? 'Edit Record' : 'New Record',
-                      style: VoidTextStyles.headlineMedium),
-                  _TypeToggle(
+                  Center(
+                    child: Container(
+                      width: 36, height: 4,
+                      margin: const EdgeInsets.only(bottom: 22),
+                      decoration: BoxDecoration(
+                        color: VoidColors.outline,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _isEditing
+                            ? 'Edit Record'
+                            : (_isAllowance
+                                ? 'Add Allowance'
+                                : 'Add Allowance'),
+                        style: VoidTextStyles.headlineMedium,
+                      ),
+                      _TypeToggle(
+                        isAllowance: _isAllowance,
+                        onChanged: (v) =>
+                            setState(() => _isAllowance = v),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  _Label('Item Name'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _titleCtrl,
+                    textCapitalization:
+                        TextCapitalization.sentences,
+                    style: VoidTextStyles.bodyLarge,
+                    decoration: const InputDecoration(
+                        hintText: ''),
+                  ),
+                  const SizedBox(height: 18),
+                  _Label('Amount'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _amountCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true),
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: VoidColors.textPrimary,
+                      letterSpacing: -0.8,
+                    ),
+                    decoration: const InputDecoration(
+                      prefixText: '₹  ',
+                      prefixStyle: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                        color: VoidColors.textHint,
+                      ),
+                      hintText: '',
+                    ),
+                  ),
+                  if (!_isAllowance) ...[
+                    const SizedBox(height: 22),
+                    _Label('Category'),
+                    const SizedBox(height: 12),
+                    _CategoryGrid(
+                      selected: _category,
+                      onSelect: (c) => setState(() => _category = c),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: _pickDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: VoidColors.outlineVariant,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            color: VoidColors.textSecondary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(_fmtDate(_date),
+                              style: VoidTextStyles.bodyMedium
+                                  .copyWith(
+                                      color: VoidColors.textPrimary)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  _SubmitButton(
+                    label: _isEditing
+                        ? 'Update Record'
+                        : (_isAllowance
+                            ? 'Save Income'
+                            : 'Save Expense'),
                     isAllowance: _isAllowance,
-                    onChanged: (v) => setState(() => _isAllowance = v),
+                    onTap: _submit,
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              _FieldLabel('Item Name'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _titleCtrl,
-                textCapitalization: TextCapitalization.sentences,
-                style: VoidTextStyles.bodyLarge,
-                decoration: const InputDecoration(
-                  hintText: '',
-                ),
-              ),
-              const SizedBox(height: 16),
-              _FieldLabel('Amount'),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _amountCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: VoidColors.textPrimary,
-                  letterSpacing: -0.5,
-                ),
-                decoration: const InputDecoration(
-                  prefixText: '₹ ',
-                  hintText: '',
-                ),
-              ),
-              if (!_isAllowance) ...[
-                const SizedBox(height: 20),
-                _FieldLabel('Category'),
-                const SizedBox(height: 12),
-                _CategoryPicker(
-                  selected: _category,
-                  onSelect: (c) => setState(() => _category = c),
-                ),
-              ],
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: _pickDate,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: VoidColors.outlineVariant,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today_rounded,
-                          color: VoidColors.primary, size: 18),
-                      const SizedBox(width: 12),
-                      Text(_fmtDate(_date),
-                          style: VoidTextStyles.bodyLarge),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-              ElevatedButton(
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isAllowance
-                      ? VoidColors.success
-                      : VoidColors.primary,
-                ),
-                child: Text(_isEditing
-                    ? 'Update Record'
-                    : (_isAllowance ? 'Save Allowance' : 'Save Expense')),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -198,21 +232,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   String _fmtDate(DateTime d) {
-    const m = ['','Jan','Feb','Mar','Apr','May','Jun',
-                'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const m = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     return '${d.day} ${m[d.month]} ${d.year}';
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  final String text;
-  const _FieldLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(text,
-        style: VoidTextStyles.labelLarge
-            .copyWith(color: VoidColors.textSecondary));
   }
 }
 
@@ -233,14 +257,16 @@ class _TypeToggle extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _Pill(label: 'Expense',
-              active: !isAllowance,
-              color: VoidColors.danger,
-              onTap: () => onChanged(false)),
-          _Pill(label: 'Allow',
-              active: isAllowance,
-              color: VoidColors.success,
-              onTap: () => onChanged(true)),
+          _Pill(
+            label: 'Expense',
+            active: !isAllowance,
+            onTap: () => onChanged(false),
+          ),
+          _Pill(
+            label: 'Income',
+            active: isAllowance,
+            onTap: () => onChanged(true),
+          ),
         ],
       ),
     );
@@ -250,13 +276,11 @@ class _TypeToggle extends StatelessWidget {
 class _Pill extends StatelessWidget {
   final String label;
   final bool active;
-  final Color color;
   final VoidCallback onTap;
 
   const _Pill({
     required this.label,
     required this.active,
-    required this.color,
     required this.onTap,
   });
 
@@ -265,69 +289,205 @@ class _Pill extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(
+            horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? color : Colors.transparent,
+          color: active ? VoidColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: active ? Colors.white : VoidColors.textSecondary,
-            )),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: active ? Colors.white : VoidColors.textSecondary,
+          ),
+        ),
       ),
     );
   }
 }
 
-class _CategoryPicker extends StatelessWidget {
+class _CategoryGrid extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onSelect;
 
-  const _CategoryPicker({required this.selected, required this.onSelect});
+  const _CategoryGrid({
+    required this.selected,
+    required this.onSelect,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8, runSpacing: 8,
-      children: ExpenseCategory.all.map((cat) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 0.9,
+      ),
+      itemCount: ExpenseCategory.all.length,
+      itemBuilder: (_, i) {
+        final cat    = ExpenseCategory.all[i];
         final meta   = categoryMeta(cat);
         final active = selected == cat;
         return GestureDetector(
           onTap: () => onSelect(cat),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-            width: 66,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
             decoration: BoxDecoration(
-              color: active ? meta.lightColor : VoidColors.outlineVariant,
+              color: active
+                  ? VoidColors.primaryLight
+                  : VoidColors.outlineVariant,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: active ? meta.color : Colors.transparent,
+                color: active
+                    ? VoidColors.primary.withOpacity(0.4)
+                    : Colors.transparent,
                 width: 1.5,
               ),
             ),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(meta.icon,
-                    color: active ? meta.color : VoidColors.textHint,
-                    size: 22),
-                const SizedBox(height: 5),
-                Text(cat,
-                    style: TextStyle(
-                      fontSize: 9, fontWeight: FontWeight.w600,
-                      color: active ? meta.color : VoidColors.textHint,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                Icon(
+                  meta.icon,
+                  size: 20,
+                  color: active
+                      ? VoidColors.primary
+                      : VoidColors.iconColor,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  cat,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                    color: active
+                        ? VoidColors.primary
+                        : VoidColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
         );
-      }).toList(),
+      },
+    );
+  }
+}
+
+class _SubmitButton extends StatefulWidget {
+  final String label;
+  final bool isAllowance;
+  final VoidCallback onTap;
+
+  const _SubmitButton({
+    required this.label,
+    required this.isAllowance,
+    required this.onTap,
+  });
+
+  @override
+  State<_SubmitButton> createState() => _SubmitButtonState();
+}
+
+class _SubmitButtonState extends State<_SubmitButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double>   _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      value: 1,
+    );
+    _scale = Tween(begin: 0.96, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown:   (_) => _ctrl.reverse(),
+      onTapUp:     (_) { _ctrl.forward(); widget.onTap(); },
+      onTapCancel: ()  => _ctrl.forward(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 17),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: widget.isAllowance
+                  ? [
+                      const Color(0xFFB49BFB),
+                      const Color(0xFF7C5CFC),
+                    ]
+                  : [
+                      VoidColors.gradientStart,
+                      VoidColors.gradientEnd,
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: VoidColors.primary.withOpacity(0.28),
+                blurRadius: 16,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            widget.label,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  final String text;
+  const _Label(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: VoidColors.textHint,
+        letterSpacing: 0.4,
+      ),
     );
   }
 }

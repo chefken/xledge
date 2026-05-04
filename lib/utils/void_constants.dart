@@ -1,7 +1,7 @@
 class HiveBoxes {
   HiveBoxes._();
   static const expenses = 'expenses';
-  static const debts = 'debts';
+  static const debts    = 'debts';
 }
 
 class ExpenseCategory {
@@ -9,14 +9,14 @@ class ExpenseCategory {
   static const food          = 'Food';
   static const transport     = 'Transport';
   static const shopping      = 'Shopping';
-  static const health        = 'Health';
   static const bills         = 'Bills';
+  static const health        = 'Health';
+  static const gym           = 'Gym';
   static const entertainment = 'Entertainment';
-  static const education     = 'Education';
   static const other         = 'Other';
 
   static const all = [
-    food, transport, shopping, health,
-    bills, entertainment, education, other,
+    food, transport, shopping, bills,
+    health, gym, entertainment, other,
   ];
 }

@@ -27,11 +27,14 @@ class _RootScreenState extends State<RootScreen>
     super.initState();
     _fabCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 380),
       value: 1,
     );
     _fabAnim = CurvedAnimation(
-        parent: _fabCtrl, curve: Curves.easeOutCubic);
+      parent: _fabCtrl,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeInCubic,
+    );
   }
 
   @override
@@ -43,12 +46,9 @@ class _RootScreenState extends State<RootScreen>
   void _setTab(int i) {
     if (i == _tab) return;
     HapticFeedback.selectionClick();
-
     final wasHome = _tab == 0;
     final isHome  = i == 0;
-
     setState(() => _tab = i);
-
     if (isHome && !wasHome) {
       _fabCtrl.forward();
     } else if (!isHome && wasHome) {
@@ -57,21 +57,17 @@ class _RootScreenState extends State<RootScreen>
   }
 
   void _onFabTap() {
-    if (_tab == 1) {
-      _showSheet(const AddExpenseSheet());
-    } else if (_tab == 3) {
-      _showSheet(const AddDebtSheet());
-    } else if (_tab == 0) {
-      _showSheet(const AddExpenseSheet());
-    }
+    _openSheet(_tab == 3
+        ? const AddDebtSheet()
+        : const AddExpenseSheet());
   }
 
-  void _showSheet(Widget sheet) {
+  void _openSheet(Widget w) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => sheet,
+      builder: (_) => w,
     );
   }
 
@@ -91,25 +87,25 @@ class _RootScreenState extends State<RootScreen>
       backgroundColor: VoidColors.background,
       extendBody: true,
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 320),
         switchInCurve:  Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
         transitionBuilder: (child, anim) => FadeTransition(
           opacity: anim,
           child: SlideTransition(
             position: Tween(
-              begin: const Offset(0, 0.02),
+              begin: const Offset(0, 0.015),
               end: Offset.zero,
-            ).animate(anim),
+            ).animate(CurvedAnimation(
+              parent: anim,
+              curve: Curves.easeOutCubic,
+            )),
             child: child,
           ),
         ),
-        child: KeyedSubtree(
-          key: ValueKey(_tab),
-          child: _screen(),
-        ),
+        child: KeyedSubtree(key: ValueKey(_tab), child: _screen()),
       ),
-      bottomNavigationBar: _FloatingNav(
+      bottomNavigationBar: _PremiumNav(
         current: _tab,
         fabAnim: _fabAnim,
         onTap:   _setTab,
@@ -119,13 +115,13 @@ class _RootScreenState extends State<RootScreen>
   }
 }
 
-class _FloatingNav extends StatelessWidget {
+class _PremiumNav extends StatelessWidget {
   final int current;
   final Animation<double> fabAnim;
   final ValueChanged<int> onTap;
   final VoidCallback onFab;
 
-  const _FloatingNav({
+  const _PremiumNav({
     required this.current,
     required this.fabAnim,
     required this.onTap,
@@ -136,7 +132,7 @@ class _FloatingNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+        padding: const EdgeInsets.fromLTRB(20, 6, 20, 14),
         child: SizedBox(
           height: 64,
           child: Stack(
@@ -151,57 +147,39 @@ class _FloatingNav extends StatelessWidget {
                     BoxShadow(
                       color: VoidColors.shadowLg,
                       blurRadius: 40,
-                      offset: Offset(0, 8),
+                      offset: Offset(0, 10),
                     ),
                     BoxShadow(
                       color: VoidColors.shadow,
-                      blurRadius: 8,
+                      blurRadius: 6,
                       offset: Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _NavItem(
-                      icon: Icons.home_rounded,
-                      active: current == 0,
-                      onTap: () => onTap(0),
-                    ),
-                    _NavItem(
-                      icon: Icons.receipt_long_rounded,
-                      active: current == 1,
-                      onTap: () => onTap(1),
-                    ),
-                    AnimatedBuilder(
-                      animation: fabAnim,
-                      builder: (_, __) => SizedBox(
-                        width: 56 * fabAnim.value,
-                      ),
-                    ),
-                    _NavItem(
-                      icon: Icons.handshake_rounded,
-                      active: current == 3,
-                      onTap: () => onTap(3),
-                    ),
-                    _NavItem(
-                      icon: Icons.bar_chart_rounded,
-                      active: current == 4,
-                      onTap: () => onTap(4),
-                    ),
+                    _NavItem(icon: Icons.home_rounded,
+                        active: current == 0, onTap: () => onTap(0)),
+                    _NavItem(icon: Icons.receipt_long_rounded,
+                        active: current == 1, onTap: () => onTap(1)),
+                    const Spacer(),
+                    _NavItem(icon: Icons.handshake_rounded,
+                        active: current == 3, onTap: () => onTap(3)),
+                    _NavItem(icon: Icons.bar_chart_rounded,
+                        active: current == 4, onTap: () => onTap(4)),
                   ],
                 ),
               ),
               AnimatedBuilder(
                 animation: fabAnim,
-                builder: (_, child) => Transform.scale(
-                  scale: fabAnim.value,
-                  child: Opacity(opacity: fabAnim.value, child: child),
+                builder: (_, child) => Transform.translate(
+                  offset: Offset(0, (1 - fabAnim.value) * 12),
+                  child: Transform.scale(
+                    scale: 0.7 + fabAnim.value * 0.3,
+                    child: Opacity(opacity: fabAnim.value, child: child),
+                  ),
                 ),
-                child: Positioned(
-                  top: -16,
-                  child: _FabButton(onTap: onFab),
-                ),
+                child: _FabButton(onTap: onFab),
               ),
             ],
           ),
@@ -224,30 +202,36 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 56,
-        height: 64,
-        child: Center(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            width: active ? 40 : 36,
-            height: active ? 40 : 36,
-            decoration: BoxDecoration(
-              color: active
-                  ? VoidColors.primaryLight
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              size: active ? 22 : 20,
-              color: active
-                  ? VoidColors.primary
-                  : VoidColors.textHint,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          height: 64,
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutCubic,
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: active
+                    ? VoidColors.primaryLight
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: AnimatedScale(
+                scale: active ? 1.0 : 0.9,
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                child: Icon(
+                  icon,
+                  size: 21,
+                  color: active
+                      ? VoidColors.primary
+                      : VoidColors.textHint,
+                ),
+              ),
             ),
           ),
         ),
@@ -273,11 +257,13 @@ class _FabButtonState extends State<_FabButton>
   void initState() {
     super.initState();
     _press = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 120),
-        value: 1);
-    _scale = Tween(begin: 0.9, end: 1.0)
-        .animate(CurvedAnimation(parent: _press, curve: Curves.easeOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      value: 1,
+    );
+    _scale = Tween(begin: 0.88, end: 1.0).animate(
+      CurvedAnimation(parent: _press, curve: Curves.easeOut),
+    );
   }
 
   @override
@@ -289,15 +275,9 @@ class _FabButtonState extends State<_FabButton>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) {
-        _press.reverse();
-        HapticFeedback.lightImpact();
-      },
-      onTapUp: (_) {
-        _press.forward();
-        widget.onTap();
-      },
-      onTapCancel: () => _press.forward(),
+      onTapDown:   (_) { _press.reverse(); HapticFeedback.lightImpact(); },
+      onTapUp:     (_) { _press.forward(); widget.onTap(); },
+      onTapCancel: ()  => _press.forward(),
       child: ScaleTransition(
         scale: _scale,
         child: Container(
@@ -312,8 +292,8 @@ class _FabButtonState extends State<_FabButton>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: VoidColors.primary.withOpacity(0.38),
-                blurRadius: 20,
+                color: VoidColors.primary.withOpacity(0.35),
+                blurRadius: 18,
                 offset: const Offset(0, 6),
               ),
             ],

@@ -34,35 +34,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
-              child: _Header(
-                onCalendarTap: () => _showCalendar(context, provider),
+              child: _PremiumHeader(
+                onCalendar: () => _showCal(context, provider),
               ),
             ),
             SliverToBoxAdapter(
               child: _HeroCarousel(
-                ctrl:        _pageCtrl,
-                page:        _heroPage,
-                onPage:      (i) => setState(() => _heroPage = i),
-                totalSpend:  analysis?.totalSpend ?? 0,
-                totalAllow:  provider.totalAllowance,
-                totalDebt:   provider.totalIOwe,
-                onArrowTap:  () {},
+                ctrl:       _pageCtrl,
+                page:       _heroPage,
+                onPage:     (i) => setState(() => _heroPage = i),
+                totalSpend: analysis?.totalSpend ?? 0,
+                totalAllow: provider.totalAllowance,
+                totalDebt:  provider.totalIOwe,
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 14),
+                padding: const EdgeInsets.fromLTRB(24, 36, 24, 14),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Recent',
-                        style: VoidTextStyles.titleLarge),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: VoidColors.textPrimary,
+                          letterSpacing: -0.2,
+                        )),
                     GestureDetector(
                       onTap: () {},
                       child: const Text('See all',
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w400,
                             color: VoidColors.primary,
                           )),
                     ),
@@ -100,64 +104,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showCalendar(BuildContext context, VoidProvider provider) {
+  void _showCal(BuildContext context, VoidProvider provider) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _CalendarSheet(provider: provider),
+      builder: (_) => _PremiumCalendar(provider: provider),
     );
   }
 }
 
-class _Header extends StatelessWidget {
-  final VoidCallback onCalendarTap;
-  const _Header({required this.onCalendarTap});
+class _PremiumHeader extends StatelessWidget {
+  final VoidCallback onCalendar;
+  const _PremiumHeader({required this.onCalendar});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 64, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 68, 24, 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Hello,',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: VoidColors.textSecondary,
-                    letterSpacing: -0.1,
-                  )),
-              const SizedBox(height: 1),
-              const Text('Chef',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w700,
-                    color: VoidColors.textPrimary,
-                    letterSpacing: -0.8,
-                    height: 1.1,
-                  )),
+              const Text(
+                'Hello,',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w300,
+                  color: VoidColors.textSecondary,
+                  letterSpacing: 0.2,
+                  height: 1.3,
+                ),
+              ),
+              const Text(
+                'Chef',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                  color: VoidColors.textPrimary,
+                  letterSpacing: -1.0,
+                  height: 1.1,
+                ),
+              ),
             ],
           ),
-          _CalendarBtn(onTap: onCalendarTap),
+          _CalendarButton(onTap: onCalendar),
         ],
       ),
     );
   }
 }
 
-class _CalendarBtn extends StatefulWidget {
+class _CalendarButton extends StatefulWidget {
   final VoidCallback onTap;
-  const _CalendarBtn({required this.onTap});
+  const _CalendarButton({required this.onTap});
 
   @override
-  State<_CalendarBtn> createState() => _CalendarBtnState();
+  State<_CalendarButton> createState() => _CalendarButtonState();
 }
 
-class _CalendarBtnState extends State<_CalendarBtn>
+class _CalendarButtonState extends State<_CalendarButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double>   _scale;
@@ -166,40 +175,50 @@ class _CalendarBtnState extends State<_CalendarBtn>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 120), value: 1);
+        vsync: this,
+        duration: const Duration(milliseconds: 130),
+        value: 1);
     _scale = Tween(begin: 0.88, end: 1.0).animate(
         CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => _ctrl.reverse(),
-      onTapUp:   (_) { _ctrl.forward(); widget.onTap(); },
-      onTapCancel: () => _ctrl.forward(),
+      onTapDown:   (_) => _ctrl.reverse(),
+      onTapUp:     (_) { _ctrl.forward(); widget.onTap(); },
+      onTapCancel: ()  => _ctrl.forward(),
       child: ScaleTransition(
         scale: _scale,
         child: Container(
-          width: 46,
-          height: 46,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: VoidColors.surface,
             shape: BoxShape.circle,
             boxShadow: const [
               BoxShadow(
                 color: VoidColors.shadowMd,
-                blurRadius: 16,
-                offset: Offset(0, 3),
+                blurRadius: 18,
+                offset: Offset(0, 4),
+              ),
+              BoxShadow(
+                color: VoidColors.shadow,
+                blurRadius: 4,
+                offset: Offset(0, 1),
               ),
             ],
           ),
           child: const Icon(
-            Icons.calendar_month_rounded,
+            Icons.calendar_month_outlined,
             color: VoidColors.textSecondary,
-            size: 20,
+            size: 18,
           ),
         ),
       ),
@@ -214,7 +233,6 @@ class _HeroCarousel extends StatelessWidget {
   final double totalSpend;
   final double totalAllow;
   final double totalDebt;
-  final VoidCallback onArrowTap;
 
   const _HeroCarousel({
     required this.ctrl,
@@ -223,7 +241,6 @@ class _HeroCarousel extends StatelessWidget {
     required this.totalSpend,
     required this.totalAllow,
     required this.totalDebt,
-    required this.onArrowTap,
   });
 
   @override
@@ -233,57 +250,52 @@ class _HeroCarousel extends StatelessWidget {
         tag: 'THIS MONTH',
         label: 'Total Spent',
         amount: totalSpend,
-        colors: [const Color(0xFFA78BFA), const Color(0xFF7C5CFC)],
+        gradients: [const Color(0xFFA78BFA), const Color(0xFF6C3CE1)],
       ),
       _CardData(
         tag: 'THIS MONTH',
-        label: 'Received',
+        label: 'Allowance',
         amount: totalAllow,
-        colors: [const Color(0xFF6EE7B7), const Color(0xFF059669)],
+        gradients: [const Color(0xFFB49BFB), const Color(0xFF7C5CFC)],
       ),
       _CardData(
         tag: 'OUTSTANDING',
         label: 'You Owe',
         amount: totalDebt,
-        colors: [const Color(0xFFFCA5A5), const Color(0xFFDC2626)],
+        gradients: [const Color(0xFF9B8AFB), const Color(0xFF4C35C8)],
       ),
     ];
 
     return Column(
       children: [
         SizedBox(
-          height: 170,
+          height: 168,
           child: PageView.builder(
             controller: ctrl,
             onPageChanged: onPage,
             physics: const BouncingScrollPhysics(),
             itemCount: cards.length,
-            itemBuilder: (_, i) {
-              return AnimatedBuilder(
-                animation: ctrl,
-                builder: (_, child) {
-                  double p = 0;
-                  try { p = ctrl.page ?? i.toDouble(); } catch (_) {}
-                  final d     = (p - i).abs().clamp(0.0, 1.0);
-                  final scale = 1.0 - d * 0.04;
-                  final opacity = 1.0 - d * 0.3;
-                  return Transform.scale(
-                    scale: scale,
-                    child: Opacity(opacity: opacity, child: child),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: _HeroCard(
-                    data: cards[i],
-                    onArrow: onArrowTap,
-                  ),
-                ),
-              );
-            },
+            itemBuilder: (_, i) => AnimatedBuilder(
+              animation: ctrl,
+              builder: (_, child) {
+                double p = 0;
+                try { p = ctrl.page ?? i.toDouble(); } catch (_) {}
+                final d       = (p - i).abs().clamp(0.0, 1.0);
+                final scale   = 1.0 - d * 0.035;
+                final opacity = 1.0 - d * 0.25;
+                return Transform.scale(
+                  scale: scale,
+                  child: Opacity(opacity: opacity, child: child),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: _HeroCard(data: cards[i]),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
@@ -292,8 +304,8 @@ class _HeroCarousel extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutCubic,
               margin: const EdgeInsets.symmetric(horizontal: 3),
-              width:  page == i ? 22 : 6,
-              height: 6,
+              width:  page == i ? 20 : 5,
+              height: 5,
               decoration: BoxDecoration(
                 color: page == i
                     ? VoidColors.primary
@@ -312,35 +324,33 @@ class _CardData {
   final String tag;
   final String label;
   final double amount;
-  final List<Color> colors;
+  final List<Color> gradients;
   const _CardData({
     required this.tag,
     required this.label,
     required this.amount,
-    required this.colors,
+    required this.gradients,
   });
 }
 
 class _HeroCard extends StatelessWidget {
   final _CardData data;
-  final VoidCallback onArrow;
-
-  const _HeroCard({required this.data, required this.onArrow});
+  const _HeroCard({required this.data});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: data.colors,
+          colors: data.gradients,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: data.colors.last.withOpacity(0.25),
-            blurRadius: 24,
+            color: data.gradients.last.withOpacity(0.28),
+            blurRadius: 22,
             offset: const Offset(0, 8),
           ),
         ],
@@ -352,46 +362,40 @@ class _HeroCard extends StatelessWidget {
           Text(data.tag,
               style: const TextStyle(
                 fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Colors.white70,
-                letterSpacing: 1.4,
+                fontWeight: FontWeight.w500,
+                color: Colors.white54,
+                letterSpacing: 1.5,
               )),
           const Spacer(),
           Text(
             '₹${data.amount.toStringAsFixed(0)}',
             style: const TextStyle(
-              fontSize: 34,
+              fontSize: 36,
               fontWeight: FontWeight.w700,
               color: Colors.white,
-              letterSpacing: -1.2,
+              letterSpacing: -1.4,
               height: 1.0,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(data.label,
                   style: const TextStyle(
                     fontSize: 13,
-                    color: Colors.white70,
+                    color: Colors.white60,
                     fontWeight: FontWeight.w400,
+                    letterSpacing: -0.1,
                   )),
-              GestureDetector(
-                onTap: onArrow,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
+              Container(
+                width: 30, height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.18),
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.arrow_forward_rounded,
+                    color: Colors.white, size: 14),
               ),
             ],
           ),
@@ -409,20 +413,19 @@ class _EmptyRecent extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 60, height: 60,
             decoration: BoxDecoration(
               color: VoidColors.primaryLight,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
             ),
-            child: const Icon(Icons.receipt_long_rounded,
-                color: VoidColors.primary, size: 28),
+            child: const Icon(Icons.receipt_long_outlined,
+                color: VoidColors.primary, size: 26),
           ),
           const SizedBox(height: 14),
-          const Text('No transactions yet',
+          const Text('Nothing yet',
               style: VoidTextStyles.titleMedium),
-          const SizedBox(height: 6),
-          const Text('Your activity will appear here',
+          const SizedBox(height: 5),
+          const Text('Your activity will show here',
               style: VoidTextStyles.bodyMedium,
               textAlign: TextAlign.center),
         ],
@@ -431,35 +434,79 @@ class _EmptyRecent extends StatelessWidget {
   }
 }
 
-class _CalendarSheet extends StatefulWidget {
+class _PremiumCalendar extends StatefulWidget {
   final VoidProvider provider;
-  const _CalendarSheet({required this.provider});
+  const _PremiumCalendar({required this.provider});
 
   @override
-  State<_CalendarSheet> createState() => _CalendarSheetState();
+  State<_PremiumCalendar> createState() => _PremiumCalendarState();
 }
 
-class _CalendarSheetState extends State<_CalendarSheet> {
+class _PremiumCalendarState extends State<_PremiumCalendar>
+    with TickerProviderStateMixin {
   DateTime  _focus    = DateTime.now();
   DateTime? _selected;
 
-  static const _months = [
+  late AnimationController _slideCtrl;
+  late Animation<Offset>   _slideAnim;
+  late Animation<double>   _fadeAnim;
+  int _slideDir = 1;
+
+  static const _monthNames = [
     '', 'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-  static const _short = [
+  static const _shortMonths = [
     '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
-  static const _days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  static const _dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  @override
+  void initState() {
+    super.initState();
+    _slideCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    )..forward();
+    _buildAnims(1);
+  }
+
+  void _buildAnims(int dir) {
+    _slideAnim = Tween<Offset>(
+      begin: Offset(dir * 0.06, 0),
+      end:   Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideCtrl,
+      curve:  Curves.easeOutCubic,
+    ));
+    _fadeAnim = CurvedAnimation(
+        parent: _slideCtrl, curve: Curves.easeOut);
+  }
+
+  void _changeMonth(int dir) {
+    _slideDir = dir;
+    _slideCtrl.reset();
+    _buildAnims(dir);
+    setState(() {
+      _focus = DateTime(_focus.year, _focus.month + dir);
+    });
+    _slideCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _slideCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final dim  = DateUtils.getDaysInMonth(_focus.year, _focus.month);
+    final dim   = DateUtils.getDaysInMonth(_focus.year, _focus.month);
     final first = DateTime(_focus.year, _focus.month, 1).weekday % 7;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.70,
+      height: MediaQuery.of(context).size.height * 0.68,
       decoration: const BoxDecoration(
         color: VoidColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -475,24 +522,35 @@ class _CalendarSheetState extends State<_CalendarSheet> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 22, 24, 8),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 6),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${_months[_focus.month]} ${_focus.year}',
-                    style: VoidTextStyles.titleLarge),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim, child: child),
+                  child: Text(
+                    '${_monthNames[_focus.month]} ${_focus.year}',
+                    key: ValueKey('${_focus.month}-${_focus.year}'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: VoidColors.textPrimary,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                ),
                 Row(
                   children: [
-                    _ChevronBtn(
+                    _MonthBtn(
                       icon: Icons.chevron_left_rounded,
-                      onTap: () => setState(() => _focus =
-                          DateTime(_focus.year, _focus.month - 1)),
+                      onTap: () => _changeMonth(-1),
                     ),
                     const SizedBox(width: 8),
-                    _ChevronBtn(
+                    _MonthBtn(
                       icon: Icons.chevron_right_rounded,
-                      onTap: () => setState(() => _focus =
-                          DateTime(_focus.year, _focus.month + 1)),
+                      onTap: () => _changeMonth(1),
                     ),
                   ],
                 ),
@@ -500,112 +558,104 @@ class _CalendarSheetState extends State<_CalendarSheet> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: _days
+              children: _dayHeaders
                   .map((d) => SizedBox(
-                        width: 36,
+                        width: 34,
                         child: Text(d,
-                            style: VoidTextStyles.labelSmall,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: VoidColors.textHint,
+                            ),
                             textAlign: TextAlign.center),
                       ))
                   .toList(),
             ),
           ),
-          const SizedBox(height: 6),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 7,
-                  mainAxisSpacing: 2,
-                  crossAxisSpacing: 2,
-                ),
-                itemCount: first + dim,
-                itemBuilder: (_, i) {
-                  if (i < first) return const SizedBox.shrink();
-                  final day  = i - first + 1;
-                  final date = DateTime(_focus.year, _focus.month, day);
-                  final isSel =
-                      _selected != null && DateUtils.isSameDay(_selected!, date);
-                  final isToday = DateUtils.isSameDay(date, DateTime.now());
-
-                  final expenses = widget.provider
-                      .getAllExpensesForMonth(_focus.year, _focus.month)
-                      .where((e) => e.date.day == day)
-                      .toList();
-
-                  final hasSpend = expenses.any((e) => !e.isAllowance);
-                  final hasAllow = expenses.any((e) => e.isAllowance);
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() => _selected = date);
-                      _showDayDetail(context, date, expenses);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: isSel
-                            ? VoidColors.primary
-                            : isToday
-                                ? VoidColors.primaryLight
-                                : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Text('$day',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: isToday || isSel
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
-                                color: isSel
-                                    ? Colors.white
-                                    : isToday
-                                        ? VoidColors.primary
-                                        : VoidColors.textPrimary,
-                              )),
-                          if ((hasSpend || hasAllow) && !isSel)
-                            Positioned(
-                              bottom: 4,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (hasSpend)
-                                    Container(
-                                      width: 4, height: 4,
-                                      decoration: const BoxDecoration(
-                                        color: VoidColors.primary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  if (hasSpend && hasAllow)
-                                    const SizedBox(width: 2),
-                                  if (hasAllow)
-                                    Container(
-                                      width: 4, height: 4,
-                                      decoration: BoxDecoration(
-                                        color: VoidColors.primary
-                                            .withOpacity(0.4),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      mainAxisSpacing: 2,
+                      crossAxisSpacing: 2,
                     ),
-                  );
-                },
+                    itemCount: first + dim,
+                    itemBuilder: (_, i) {
+                      if (i < first) return const SizedBox.shrink();
+                      final day  = i - first + 1;
+                      final date = DateTime(_focus.year, _focus.month, day);
+                      final isSel = _selected != null &&
+                          DateUtils.isSameDay(_selected!, date);
+                      final isToday =
+                          DateUtils.isSameDay(date, DateTime.now());
+
+                      final exps = widget.provider
+                          .getAllExpensesForMonth(_focus.year, _focus.month)
+                          .where((e) => e.date.day == day)
+                          .toList();
+
+                      final hasActivity = exps.isNotEmpty;
+                      final spendAmt = exps
+                          .where((e) => !e.isAllowance)
+                          .fold(0.0, (s, e) => s + e.amount);
+                      final maxDay = 2000.0;
+                      final intensity = spendAmt > 0
+                          ? (spendAmt / maxDay).clamp(0.12, 0.7)
+                          : 0.0;
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => _selected = date);
+                          _showDayDetail(context, date, exps);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutCubic,
+                          margin: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: isSel
+                                ? VoidColors.primary
+                                : isToday
+                                    ? VoidColors.primaryLight
+                                    : hasActivity
+                                        ? VoidColors.primary
+                                            .withOpacity(intensity)
+                                        : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '$day',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSel || isToday
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                              color: isSel
+                                  ? Colors.white
+                                  : isToday
+                                      ? VoidColors.primary
+                                      : intensity > 0.45
+                                          ? Colors.white
+                                          : VoidColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -614,11 +664,11 @@ class _CalendarSheetState extends State<_CalendarSheet> {
     );
   }
 
-  void _showDayDetail(BuildContext context, DateTime date, List expenses) {
-    final spent = expenses
+  void _showDayDetail(BuildContext context, DateTime date, List exps) {
+    final spent = exps
         .where((e) => !e.isAllowance)
         .fold(0.0, (s, e) => s + e.amount);
-    final received = expenses
+    final recv = exps
         .where((e) => e.isAllowance)
         .fold(0.0, (s, e) => s + e.amount);
 
@@ -626,7 +676,7 @@ class _CalendarSheetState extends State<_CalendarSheet> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.fromLTRB(24, 14, 24, 36),
         decoration: const BoxDecoration(
           color: VoidColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -635,15 +685,103 @@ class _CalendarSheetState extends State<_CalendarSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: VoidColors.outline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
             Text(
-              '${date.day} ${_short[date.month]}',
-              style: VoidTextStyles.headlineMedium,
+              '${date.day} ${_shortMonths[date.month]}',
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: VoidColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
             ),
             const SizedBox(height: 20),
-            _DayRow('Spent',    spent > 0    ? '-₹${spent.toStringAsFixed(0)}' : '₹0',    VoidColors.danger),
-            _DayRow('Received', received > 0 ? '+₹${received.toStringAsFixed(0)}' : '₹0', VoidColors.success),
-            _DayRow('Debt',     '₹0',  VoidColors.textSecondary),
-            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _DayStatCard(
+                    label: 'Spent',
+                    value: spent > 0
+                        ? '-₹${spent.toStringAsFixed(0)}'
+                        : '₹0',
+                    color: spent > 0
+                        ? VoidColors.textPrimary
+                        : VoidColors.textHint,
+                    bg: VoidColors.outlineVariant,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DayStatCard(
+                    label: 'Received',
+                    value: recv > 0
+                        ? '+₹${recv.toStringAsFixed(0)}'
+                        : '₹0',
+                    color: recv > 0
+                        ? VoidColors.primary
+                        : VoidColors.textHint,
+                    bg: recv > 0
+                        ? VoidColors.primaryLight
+                        : VoidColors.outlineVariant,
+                  ),
+                ),
+              ],
+            ),
+            if (exps.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              const Text('Transactions',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: VoidColors.textHint,
+                    letterSpacing: 0.3,
+                  )),
+              const SizedBox(height: 8),
+              ...exps.take(3).map((e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32, height: 32,
+                          decoration: BoxDecoration(
+                            color: VoidColors.outlineVariant,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.receipt_outlined,
+                              size: 14,
+                              color: VoidColors.iconColor),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(e.title,
+                              style: VoidTextStyles.bodyMedium
+                                  .copyWith(
+                                      color: VoidColors.textPrimary)),
+                        ),
+                        Text(
+                          '${e.isAllowance ? '+' : '-'}₹${e.amount.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: e.isAllowance
+                                ? VoidColors.primary
+                                : VoidColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -651,25 +789,43 @@ class _CalendarSheetState extends State<_CalendarSheet> {
   }
 }
 
-class _DayRow extends StatelessWidget {
+class _DayStatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  const _DayRow(this.label, this.value, this.color);
+  final Color bg;
+
+  const _DayStatCard({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.bg,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: VoidTextStyles.bodyMedium),
+          Text(label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: VoidColors.textHint,
+                fontWeight: FontWeight.w400,
+              )),
+          const SizedBox(height: 6),
           Text(value,
               style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
                 color: color,
+                letterSpacing: -0.5,
               )),
         ],
       ),
@@ -677,10 +833,10 @@ class _DayRow extends StatelessWidget {
   }
 }
 
-class _ChevronBtn extends StatelessWidget {
+class _MonthBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const _ChevronBtn({required this.icon, required this.onTap});
+  const _MonthBtn({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
