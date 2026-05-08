@@ -91,12 +91,10 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                     ),
                   ),
                 ),
-                const Text('Add Debt',
+                 Text('Add Debt',
                     style: VoidTextStyles.headlineMedium),
-                const SizedBox(height: 6),
-                const Text('Track who owes whom.',
-                    style: VoidTextStyles.bodyMedium),
-                const SizedBox(height: 28),
+                
+                const SizedBox(height: 20),
                 _DebtTypeSelector(
                   isIOwe: _isIOwe,
                   onChanged: (v) => setState(() => _isIOwe = v),
@@ -104,14 +102,14 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 22),
                 _SheetField(
                   controller: _nameCtrl,
-                  hint: 'Person\'s name',
+                  hint: '',
                   label: 'Contact',
                   capitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _amountCtrl,
-                  hint: '0',
+                  hint: '',
                   label: 'Amount',
                   prefix: '₹  ',
                   keyboardType: const TextInputType.numberWithOptions(
@@ -121,7 +119,7 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _descCtrl,
-                  hint: 'Add a note (optional)',
+                  hint: '',
                   label: 'Reason',
                   capitalization: TextCapitalization.sentences,
                 ),

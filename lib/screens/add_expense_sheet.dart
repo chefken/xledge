@@ -217,7 +217,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
                     label: _isEditing
                         ? 'Update Record'
                         : (_isAllowance
-                            ? 'Save Income'
+                            ? 'Save Allowance'
                             : 'Save Expense'),
                     isAllowance: _isAllowance,
                     onTap: _submit,
@@ -263,7 +263,7 @@ class _TypeToggle extends StatelessWidget {
             onTap: () => onChanged(false),
           ),
           _Pill(
-            label: 'Income',
+            label: 'Allowance',
             active: isAllowance,
             onTap: () => onChanged(true),
           ),

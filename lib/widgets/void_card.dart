@@ -7,7 +7,6 @@ class VoidCard extends StatelessWidget {
   final Color? color;
   final double radius;
   final VoidCallback? onTap;
-  final List<BoxShadow>? shadows;
 
   const VoidCard({
     super.key,
@@ -16,7 +15,6 @@ class VoidCard extends StatelessWidget {
     this.color,
     this.radius = 24,
     this.onTap,
-    this.shadows,
   });
 
   @override
@@ -28,14 +26,18 @@ class VoidCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: color ?? VoidColors.surface,
           borderRadius: BorderRadius.circular(radius),
-          boxShadow: shadows ??
-              const [
-                BoxShadow(
-                  color: VoidColors.shadowMd,
-                  blurRadius: 24,
-                  offset: Offset(0, 4),
-                ),
-              ],
+          boxShadow: const [
+            BoxShadow(
+              color: VoidColors.shadowMd,
+              blurRadius: 20,
+              offset: Offset(0, 4),
+            ),
+            BoxShadow(
+              color: VoidColors.shadow,
+              blurRadius: 4,
+              offset: Offset(0, 1),
+            ),
+          ],
         ),
         child: child,
       ),

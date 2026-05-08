@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/void_colors.dart';
-import 'package:xledge/utils/void_text_styles.dart';
 
 class TransactionTile extends StatelessWidget {
   final Expense expense;
@@ -21,6 +21,8 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final meta    = categoryMeta(expense.category);
     final isAllow = expense.isAllowance;
+    final color   = isAllow ? VoidColors.primary : VoidColors.textPrimary;
+    final prefix  = isAllow ? '+' : '-';
 
     return Dismissible(
       key: Key(expense.id),
@@ -30,7 +32,7 @@ class TransactionTile extends StatelessWidget {
         alignment: Alignment.centerLeft,
       ),
       secondaryBackground: _swipeBg(
-        color: VoidColors.textSecondary,
+        color: VoidColors.danger,
         icon: Icons.delete_outlined,
         alignment: Alignment.centerRight,
       ),
@@ -46,24 +48,21 @@ class TransactionTile extends StatelessWidget {
         if (dir == DismissDirection.endToStart) onDismiss?.call();
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 9),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 44, height: 44,
               decoration: BoxDecoration(
                 color: isAllow
                     ? VoidColors.primaryLight
                     : VoidColors.iconBg,
-                borderRadius: BorderRadius.circular(13),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 isAllow ? Icons.savings_outlined : meta.icon,
-                color: isAllow
-                    ? VoidColors.primary
-                    : VoidColors.iconColor,
-                size: 18,
+                color: isAllow ? VoidColors.primary : VoidColors.iconColor,
+                size: 19,
               ),
             ),
             const SizedBox(width: 14),
@@ -73,7 +72,7 @@ class TransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     expense.title,
-                    style: const TextStyle(
+                    style: GoogleFonts.bricolageGrotesque(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: VoidColors.textPrimary,
@@ -85,7 +84,7 @@ class TransactionTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     _smartDate(expense.date),
-                    style: const TextStyle(
+                    style: GoogleFonts.bricolageGrotesque(
                       fontSize: 11,
                       color: VoidColors.textHint,
                       fontWeight: FontWeight.w400,
@@ -96,13 +95,11 @@ class TransactionTile extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              '${isAllow ? '+' : '-'}₹${expense.amount.toStringAsFixed(0)}',
-              style: TextStyle(
+              '$prefix₹${expense.amount.toStringAsFixed(0)}',
+              style: GoogleFonts.bricolageGrotesque(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: isAllow
-                    ? VoidColors.primary
-                    : VoidColors.textPrimary,
+                color: color,
                 letterSpacing: -0.3,
               ),
             ),
@@ -118,14 +115,14 @@ class TransactionTile extends StatelessWidget {
     required Alignment alignment,
   }) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 9),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.07),
-        borderRadius: BorderRadius.circular(13),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
       ),
       alignment: alignment,
       padding: const EdgeInsets.symmetric(horizontal: 18),
-      child: Icon(icon, color: color, size: 18),
+      child: Icon(icon, color: color, size: 19),
     );
   }
 
@@ -133,23 +130,28 @@ class TransactionTile extends StatelessWidget {
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Delete record?',
-                style: VoidTextStyles.titleLarge),
-            content: const Text(
-              'This action cannot be undone.',
-              style: VoidTextStyles.bodyMedium,
-            ),
+            title: Text('Delete record?',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: VoidColors.textPrimary,
+                )),
+            content: Text('This cannot be undone.',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 13,
+                  color: VoidColors.textSecondary,
+                )),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel',
-                    style:
-                        TextStyle(color: VoidColors.textSecondary)),
+                child: Text('Cancel',
+                    style: GoogleFonts.bricolageGrotesque(
+                        color: VoidColors.textSecondary)),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Delete',
-                    style: TextStyle(
+                child: Text('Delete',
+                    style: GoogleFonts.bricolageGrotesque(
                       color: VoidColors.danger,
                       fontWeight: FontWeight.w600,
                     )),

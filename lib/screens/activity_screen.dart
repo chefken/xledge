@@ -33,8 +33,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
               .fold(0.0, (s, e) => s + e.amount);
         });
 
-        final insights  = _generateInsights(provider, now);
-
         return Scaffold(
           backgroundColor: VoidColors.background,
           body: CustomScrollView(
@@ -46,7 +44,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Activity',
+                       Text('Activity',
                           style: VoidTextStyles.headlineLarge),
                       GestureDetector(
                         onTap: hasData
@@ -85,24 +83,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: VoidCard(
-                      padding: const EdgeInsets.fromLTRB(4, 20, 12, 8),
-                      child: _PremiumGraph(data: yearData),
-                    ),
+  padding: const EdgeInsets.all(20),
+  child: _MonthlyBarGraph(data: yearData),
+),
                   ),
                 ),
               ],
-              if (insights.isNotEmpty) ...[
-                _SectionTitle('Insights'),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (_, i) => _InsightTile(text: insights[i]),
-                      childCount: insights.length,
-                    ),
-                  ),
-                ),
-              ],
+              
               if (hasData) ...[
                 _SectionTitle('Spending Mix'),
                 SliverToBoxAdapter(
@@ -363,106 +350,130 @@ class _MonthStat extends StatelessWidget {
   }
 }
 
-class _PremiumGraph extends StatelessWidget {
+class _MonthlyBarGraph extends StatefulWidget {
   final List<double> data;
-  const _PremiumGraph({required this.data});
+  const _MonthlyBarGraph({required this.data});
+
+  @override
+  State<_MonthlyBarGraph> createState() => _MonthlyBarGraphState();
+}
+
+class _MonthlyBarGraphState extends State<_MonthlyBarGraph>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double>   _anim;
+  int _tapped = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     const labels = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-    final max    = data.isEmpty ? 1.0 : data.reduce((a, b) => a > b ? a : b);
+    final max = widget.data.isEmpty
+        ? 1.0
+        : widget.data.reduce((a, b) => a > b ? a : b);
 
-    return SizedBox(
-      height: 150,
-      child: LineChart(
-        LineChartData(
-          minY: 0,
-          maxY: max * 1.3,
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: false,
-            horizontalInterval: max > 0 ? max / 3 : 1,
-            getDrawingHorizontalLine: (_) => const FlLine(
-              color: VoidColors.outlineVariant,
-              strokeWidth: 1,
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(
-            rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            leftTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 1,
-                getTitlesWidget: (v, _) {
-                  final i = v.toInt();
-                  if (i < 0 || i >= data.length) return const SizedBox();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(labels[i],
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) {
+        return SizedBox(
+          height: 160,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(widget.data.length, (i) {
+              final val        = widget.data[i];
+              final ratio      = max > 0 ? val / max : 0.0;
+              final animRatio  = ratio * _anim.value;
+              final isTapped   = _tapped == i;
+              final intensity  = ratio.clamp(0.15, 1.0);
+
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() =>
+                      _tapped = isTapped ? -1 : i),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      if (isTapped)
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(bottom: 4),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: VoidColors.primary,
+                              borderRadius:
+                                  BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '₹${val.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontFamily: 'BricolageGrotesque',
+                                fontSize: 9,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      Padding(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 3),
+                        child: AnimatedContainer(
+                          duration:
+                              const Duration(milliseconds: 200),
+                          height: (animRatio * 120).clamp(4.0, 120.0),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                VoidColors.primary.withOpacity(
+                                    0.3 + intensity * 0.7),
+                                VoidColors.primaryDark.withOpacity(
+                                    0.4 + intensity * 0.6),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            border: isTapped
+                                ? Border.all(
+                                    color: VoidColors.primary,
+                                    width: 1.5,
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        labels[i],
                         style: const TextStyle(
+                          fontFamily: 'BricolageGrotesque',
                           fontSize: 10,
                           color: VoidColors.textHint,
                           fontWeight: FontWeight.w400,
-                        )),
-                  );
-                },
-              ),
-            ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ),
-          lineTouchData: LineTouchData(
-            touchTooltipData: LineTouchTooltipData(
-              getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
-                '₹${s.y.toStringAsFixed(0)}',
-                const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              )).toList(),
-            ),
-          ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: data.asMap().entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value))
-                  .toList(),
-              isCurved: true,
-              curveSmoothness: 0.4,
-              color: VoidColors.primary,
-              barWidth: 2,
-              dotData: FlDotData(
-                show: true,
-                getDotPainter: (_, __, ___, ____) =>
-                    FlDotCirclePainter(
-                  radius: 3,
-                  color: VoidColors.primary,
-                  strokeWidth: 2,
-                  strokeColor: VoidColors.surface,
-                ),
-              ),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  colors: [
-                    VoidColors.primary.withOpacity(0.12),
-                    VoidColors.primary.withOpacity(0.0),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-          ],
-        ),
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeOutCubic,
-      ),
+        );
+      },
     );
   }
 }
@@ -783,9 +794,9 @@ class _EmptyActivity extends StatelessWidget {
               color: VoidColors.primary, size: 26),
         ),
         const SizedBox(height: 14),
-        const Text('No data yet', style: VoidTextStyles.titleMedium),
+        Text('No data yet', style: VoidTextStyles.titleMedium),
         const SizedBox(height: 6),
-        const Text('Add expenses to see your monthly report',
+        Text('Add expenses to see your monthly report',
             style: VoidTextStyles.bodyMedium,
             textAlign: TextAlign.center),
       ],

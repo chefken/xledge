@@ -47,7 +47,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     mainAxisAlignment:
                         MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Expenses',
+                       Text('Expenses',
                           style: VoidTextStyles.headlineLarge),
                       _FilterChip(
                         label:
@@ -160,13 +160,15 @@ class _DateSection extends StatelessWidget {
                   letterSpacing: 0.3,
                 )),
             Text(
-              '${net >= 0 ? '+' : ''}₹${net.abs().toStringAsFixed(0)}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: net >= 0 ? VoidColors.success : VoidColors.danger,
-              ),
-            ),
+  '${net >= 0 ? '+' : '-'}₹${net.abs().toStringAsFixed(0)}',
+  style: TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: net >= 0
+        ? VoidColors.primary
+        : VoidColors.textPrimary,
+  ),
+),
           ],
         ),
         const SizedBox(height: 8),
@@ -260,12 +262,12 @@ class _FilterSheetState extends State<_FilterSheet> {
               ),
             ),
           ),
-          const Text('Filter by Month', style: VoidTextStyles.titleLarge),
+          Text('Filter by Month', style: VoidTextStyles.titleLarge),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Year', style: VoidTextStyles.bodyMedium),
+              Text('Year', style: VoidTextStyles.bodyMedium),
               Row(
                 children: [
                   _ChipBtn(
@@ -317,13 +319,42 @@ class _FilterSheetState extends State<_FilterSheet> {
             }),
           ),
           const SizedBox(height: 28),
-          ElevatedButton(
-            onPressed: () {
-              widget.provider.setMonth(_year, _month);
-              Navigator.pop(context);
-            },
-            child: const Text('Apply Filter'),
-          ),
+          GestureDetector(
+  onTap: () {
+    widget.provider.setMonth(_year, _month);
+    Navigator.pop(context);
+  },
+  child: Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(vertical: 17),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFFA78BFA), Color(0xFF6C3CE1)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(100),
+      boxShadow: [
+        BoxShadow(
+          color: VoidColors.primary.withOpacity(0.26),
+          blurRadius: 16,
+          offset: const Offset(0, 5),
+        ),
+      ],
+    ),
+    alignment: Alignment.center,
+    child: const Text(
+      'Apply',
+      style: TextStyle(
+        fontFamily: 'BricolageGrotesque',
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: Colors.white,
+        letterSpacing: -0.1,
+      ),
+    ),
+  ),
+),
         ],
       ),
     );
@@ -366,7 +397,7 @@ class _MiniPurpleFab extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 52, height: 52,
-        margin: const EdgeInsets.only(bottom: 80),
+        margin: const EdgeInsets.only(bottom: 98),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [VoidColors.gradientStart, VoidColors.gradientEnd],
@@ -406,9 +437,9 @@ class _Empty extends StatelessWidget {
                 color: VoidColors.primary, size: 28),
           ),
           const SizedBox(height: 14),
-          const Text('No expenses', style: VoidTextStyles.titleMedium),
+          Text('No expenses', style: VoidTextStyles.titleMedium),
           const SizedBox(height: 6),
-          const Text('Tap + to add your first record',
+          Text('Tap + to add your first record',
               style: VoidTextStyles.bodyMedium),
         ],
       ),

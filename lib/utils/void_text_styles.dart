@@ -1,54 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:xledge/utils/void_colors.dart';
 
 class VoidTextStyles {
   VoidTextStyles._();
 
-  static const displayLarge = TextStyle(
+  static TextStyle get displayLarge => GoogleFonts.bricolageGrotesque(
     fontSize: 34, fontWeight: FontWeight.w700,
-    color: VoidColors.textPrimary, letterSpacing: -1.0, height: 1.1,
+    color: VoidColors.textPrimary, letterSpacing: -1.2, height: 1.1,
   );
-  static const headlineLarge = TextStyle(
+  static TextStyle get headlineLarge => GoogleFonts.bricolageGrotesque(
     fontSize: 26, fontWeight: FontWeight.w700,
-    color: VoidColors.textPrimary, letterSpacing: -0.6, height: 1.2,
+    color: VoidColors.textPrimary, letterSpacing: -0.6, height: 1.15,
   );
-  static const headlineMedium = TextStyle(
+  static TextStyle get headlineMedium => GoogleFonts.bricolageGrotesque(
     fontSize: 22, fontWeight: FontWeight.w600,
     color: VoidColors.textPrimary, letterSpacing: -0.4,
   );
-  static const titleLarge = TextStyle(
+  static TextStyle get titleLarge => GoogleFonts.bricolageGrotesque(
     fontSize: 17, fontWeight: FontWeight.w600,
     color: VoidColors.textPrimary, letterSpacing: -0.2,
   );
-  static const titleMedium = TextStyle(
+  static TextStyle get titleMedium => GoogleFonts.bricolageGrotesque(
     fontSize: 15, fontWeight: FontWeight.w500,
     color: VoidColors.textPrimary, letterSpacing: -0.1,
   );
-  static const bodyLarge = TextStyle(
+  static TextStyle get bodyLarge => GoogleFonts.bricolageGrotesque(
     fontSize: 15, fontWeight: FontWeight.w400,
     color: VoidColors.textPrimary, letterSpacing: -0.1,
   );
-  static const bodyMedium = TextStyle(
+  static TextStyle get bodyMedium => GoogleFonts.bricolageGrotesque(
     fontSize: 13, fontWeight: FontWeight.w400,
-    color: VoidColors.textSecondary, letterSpacing: 0,
+    color: VoidColors.textSecondary,
   );
-  static const labelLarge = TextStyle(
+  static TextStyle get labelLarge => GoogleFonts.bricolageGrotesque(
     fontSize: 12, fontWeight: FontWeight.w500,
     color: VoidColors.textSecondary, letterSpacing: 0.1,
   );
-  static const labelSmall = TextStyle(
+  static TextStyle get labelSmall => GoogleFonts.bricolageGrotesque(
     fontSize: 11, fontWeight: FontWeight.w400,
     color: VoidColors.textHint, letterSpacing: 0.2,
   );
-  static const amountLarge = TextStyle(
-    fontSize: 32, fontWeight: FontWeight.w700,
-    color: VoidColors.textOnDark, letterSpacing: -1.2, height: 1.0,
-  );
-  static const amountPositive = TextStyle(
+  static TextStyle get amountPositive => GoogleFonts.bricolageGrotesque(
     fontSize: 15, fontWeight: FontWeight.w600,
     color: VoidColors.success, letterSpacing: -0.2,
   );
-  static const amountNegative = TextStyle(
+  static TextStyle get amountNegative => GoogleFonts.bricolageGrotesque(
     fontSize: 15, fontWeight: FontWeight.w600,
     color: VoidColors.danger, letterSpacing: -0.2,
   );

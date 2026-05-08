@@ -29,10 +29,13 @@ class DebtsScreen extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
-                  child: const Text('Debts',
-                      style: VoidTextStyles.headlineLarge),
+                  child: Text(
+                    'Debts',
+                    style: VoidTextStyles.headlineLarge,
+                  ),
                 ),
               ),
+
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -42,8 +45,8 @@ class DebtsScreen extends StatelessWidget {
                         child: _MonoCard(
                           label: 'YOU OWE',
                           amount: provider.totalIOwe,
-                          count:  provider.iOweDebts.length,
-                          flip:   false,
+                          count: provider.iOweDebts.length,
+                          flip: false,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -51,65 +54,82 @@ class DebtsScreen extends StatelessWidget {
                         child: _MonoCard(
                           label: 'OWES YOU',
                           amount: provider.totalTheyOwe,
-                          count:  provider.theyOweDebts.length,
-                          flip:   true,
+                          count: provider.theyOweDebts.length,
+                          flip: true,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
+
               if (provider.iOweDebts.isNotEmpty) ...[
-                _Label('You Owe'),
+                const _Label('You Owe'),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (_, i) => _DebtTile(
-                        debt:     provider.iOweDebts[i],
+                        debt: provider.iOweDebts[i],
                         provider: provider,
-                        isIOwe:   true,
+                        isIOwe: true,
                       ),
                       childCount: provider.iOweDebts.length,
                     ),
                   ),
                 ),
               ],
+
               if (provider.theyOweDebts.isNotEmpty) ...[
-                _Label('Owes You'),
+                const _Label('Owes You'),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (_, i) => _DebtTile(
-                        debt:     provider.theyOweDebts[i],
+                        debt: provider.theyOweDebts[i],
                         provider: provider,
-                        isIOwe:   false,
+                        isIOwe: false,
                       ),
                       childCount: provider.theyOweDebts.length,
                     ),
                   ),
                 ),
               ],
+
               if (provider.activeDebts.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.handshake_rounded,
-                            color: VoidColors.primaryLight, size: 44),
-                        SizedBox(height: 14),
-                        Text('All clear',
-                            style: VoidTextStyles.titleMedium),
-                        SizedBox(height: 6),
-                        Text('No outstanding debts',
-                            style: VoidTextStyles.bodyMedium),
+                        const Icon(
+                          Icons.handshake_rounded,
+                          color: VoidColors.primaryLight,
+                          size: 44,
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        Text(
+                          'All clear',
+                          style: VoidTextStyles.titleMedium,
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        Text(
+                          '',
+                          style: VoidTextStyles.bodyMedium,
+                        ),
                       ],
                     ),
                   ),
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: 130)),
+
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 130),
+              ),
             ],
           ),
         );
@@ -154,14 +174,20 @@ class _MonoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: flip ? VoidColors.primary : VoidColors.textHint,
-                letterSpacing: 1.2,
-              )),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: flip
+                  ? VoidColors.primary
+                  : VoidColors.textHint,
+              letterSpacing: 1.2,
+            ),
+          ),
+
           const SizedBox(height: 10),
+
           Text(
             '₹${amount.toStringAsFixed(0)}',
             style: TextStyle(
@@ -173,9 +199,13 @@ class _MonoCard extends StatelessWidget {
               letterSpacing: -0.8,
             ),
           ),
+
           const SizedBox(height: 4),
-          Text('$count pending',
-              style: VoidTextStyles.labelSmall),
+
+          Text(
+            '$count pending',
+            style: VoidTextStyles.labelSmall,
+          ),
         ],
       ),
     );
@@ -184,6 +214,7 @@ class _MonoCard extends StatelessWidget {
 
 class _Label extends StatelessWidget {
   final String text;
+
   const _Label(this.text);
 
   @override
@@ -191,9 +222,13 @@ class _Label extends StatelessWidget {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 10),
-        child: Text(text,
-            style: VoidTextStyles.labelLarge
-                .copyWith(color: VoidColors.textHint, letterSpacing: 0.3)),
+        child: Text(
+          text,
+          style: VoidTextStyles.labelLarge.copyWith(
+            color: VoidColors.textHint,
+            letterSpacing: 0.3,
+          ),
+        ),
       ),
     );
   }
@@ -212,8 +247,21 @@ class _DebtTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const m = ['','Jan','Feb','Mar','Apr','May','Jun',
-                'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const m = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -233,7 +281,8 @@ class _DebtTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 44, height: 44,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: isIOwe
                     ? VoidColors.outlineVariant
@@ -252,22 +301,28 @@ class _DebtTile extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(width: 14),
+
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(debt.contactName,
-                      style: VoidTextStyles.titleMedium),
-                  const SizedBox(height: 3),
                   Text(
-                    '${debt.description}  ·  '
-                    '${debt.createdAt.day} ${m[debt.createdAt.month]}',
+                    debt.contactName,
+                    style: VoidTextStyles.titleMedium,
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  Text(
+                    '${debt.description}  ·  ${debt.createdAt.day} ${m[debt.createdAt.month]}',
                     style: VoidTextStyles.labelSmall,
                   ),
                 ],
               ),
             ),
+
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -282,22 +337,28 @@ class _DebtTile extends StatelessWidget {
                     letterSpacing: -0.3,
                   ),
                 ),
+
                 const SizedBox(height: 6),
+
                 GestureDetector(
                   onTap: () => provider.settleDebt(debt.id),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: VoidColors.primaryLight,
                       borderRadius: BorderRadius.circular(100),
                     ),
-                    child: const Text('Settle',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: VoidColors.primary,
-                        )),
+                    child: const Text(
+                      'Settle',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: VoidColors.primary,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -311,18 +372,25 @@ class _DebtTile extends StatelessWidget {
 
 class _MiniPurpleFab extends StatelessWidget {
   final VoidCallback onTap;
-  const _MiniPurpleFab({required this.onTap});
+
+  const _MiniPurpleFab({
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 52, height: 52,
-        margin: const EdgeInsets.only(bottom: 80),
+        width: 52,
+        height: 52,
+        margin: const EdgeInsets.only(bottom: 98),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [VoidColors.gradientStart, VoidColors.gradientEnd],
+            colors: [
+              VoidColors.gradientStart,
+              VoidColors.gradientEnd,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -335,7 +403,11 @@ class _MiniPurpleFab extends StatelessWidget {
             ),
           ],
         ),
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+        child: const Icon(
+          Icons.add_rounded,
+          color: Colors.white,
+          size: 24,
+        ),
       ),
     );
   }
