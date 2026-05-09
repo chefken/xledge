@@ -133,7 +133,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
                             ? 'Edit Record'
                             : (_isAllowance
                                 ? 'Add Allowance'
-                                : 'Add Allowance'),
+                                : 'Add Expense'),
                         style: VoidTextStyles.headlineMedium,
                       ),
                       _TypeToggle(
