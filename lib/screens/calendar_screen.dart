@@ -102,6 +102,17 @@ class _CalendarScreenState extends State<CalendarScreen>
             SliverToBoxAdapter(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
+                switchInCurve: Curves.easeOutCubic,
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: const Offset(0, 0.04),
+                      end: Offset.zero,
+                    ).animate(anim),
+                    child: child,
+                  ),
+                ),
                 child: _DaySummary(
                   key:    ValueKey(_selected),
                   date:   _selected,
@@ -113,12 +124,14 @@ class _CalendarScreenState extends State<CalendarScreen>
             if (dayExpenses.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 10),
                   child: Text(
                     _dayLabel(_selected),
-                    style: VoidTextStyles.labelLarge.copyWith(
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
                       color: VoidColors.textHint,
-                      letterSpacing: 0.4,
+                      letterSpacing: 1.4,
                     ),
                   ),
                 ),
@@ -142,8 +155,10 @@ class _CalendarScreenState extends State<CalendarScreen>
                   padding: const EdgeInsets.symmetric(
                       vertical: 32, horizontal: 24),
                   child: Center(
-                    child: Text('No activity on this day',
-                        style: VoidTextStyles.bodyMedium),
+                    child: Text(
+                      'No activity on this day',
+                      style: VoidTextStyles.bodyMedium,
+                    ),
                   ),
                 ),
               ),
@@ -197,9 +212,9 @@ class _CalendarCard extends StatelessWidget {
         ],
       ),
       child: TableCalendar<Expense>(
-        firstDay:         DateTime(2020),
-        lastDay:          DateTime(2030),
-        focusedDay:       focused,
+        firstDay:     DateTime(2020),
+        lastDay:      DateTime(2030),
+        focusedDay:   focused,
         selectedDayPredicate: (d) => isSameDay(d, selected),
         eventLoader: (day) {
           final key = DateTime(day.year, day.month, day.day);
@@ -253,69 +268,110 @@ class _CalendarCard extends StatelessWidget {
             color: VoidColors.textHint,
           ),
         ),
-        calendarStyle: CalendarStyle(
+        calendarStyle: const CalendarStyle(
           outsideDaysVisible: false,
-          defaultTextStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: VoidColors.textPrimary,
-          ),
-          weekendTextStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: VoidColors.textPrimary,
-          ),
-          todayTextStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: VoidColors.primary,
-          ),
-          selectedTextStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: VoidColors.primary,
-          ),
-          todayDecoration: BoxDecoration(
-            color: VoidColors.primaryLight,
-            shape: BoxShape.circle,
-          ),
-          selectedDecoration: BoxDecoration(
-  color: VoidColors.primaryLight,
-  shape: BoxShape.circle,
-),
-          markerDecoration: const BoxDecoration(
-  color: VoidColors.primary,
-  shape: BoxShape.circle,
-),
-
-markerSize: 4,
-markersMaxCount: 1,
-
-
-cellMargin: const EdgeInsets.all(4),
-          rowDecoration: const BoxDecoration(
-            color: Colors.transparent,
-          ),
+          cellMargin: EdgeInsets.all(4),
+          markersMaxCount: 0,
         ),
-      calendarBuilders: CalendarBuilders(
-  markerBuilder: (context, date, events) {
-    if (events.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Align(
-      alignment: const Alignment(0, 0.35),
-      child: Container(
-        width: 4,
-        height: 4,
-        decoration: const BoxDecoration(
-          color: VoidColors.primary,
-          shape: BoxShape.circle,
+        calendarBuilders: CalendarBuilders<Expense>(
+          defaultBuilder: (context, day, focusedDay) => _DayCell(
+            day:      day,
+            selected: false,
+            today:    false,
+            hasEvent: events.containsKey(
+                DateTime(day.year, day.month, day.day)),
+          ),
+          todayBuilder: (context, day, focusedDay) => _DayCell(
+            day:      day,
+            selected: false,
+            today:    true,
+            hasEvent: events.containsKey(
+                DateTime(day.year, day.month, day.day)),
+          ),
+          selectedBuilder: (context, day, focusedDay) => _DayCell(
+            day:      day,
+            selected: true,
+            today:    false,
+            hasEvent: events.containsKey(
+                DateTime(day.year, day.month, day.day)),
+          ),
+          outsideBuilder: (context, day, focusedDay) =>
+              const SizedBox.shrink(),
         ),
       ),
     );
-  },
-),
+  }
+}
+
+class _DayCell extends StatelessWidget {
+  final DateTime day;
+  final bool selected;
+  final bool today;
+  final bool hasEvent;
+
+  const _DayCell({
+    required this.day,
+    required this.selected,
+    required this.today,
+    required this.hasEvent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final highlight = selected || today;
+
+    return Center(
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: highlight
+                    ? VoidColors.primaryLight
+                    : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '${day.day}',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 13,
+                    fontWeight: highlight
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                    color: highlight
+                        ? VoidColors.primary
+                        : VoidColors.textPrimary,
+                    height: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                SizedBox(
+                  width: 4,
+                  height: 4,
+                  child: hasEvent
+                      ? DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: VoidColors.primary.withOpacity(
+                                highlight ? 0.8 : 0.4),
+                            shape: BoxShape.circle,
+                          ),
+                        )
+                      : null,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -378,28 +434,20 @@ class _DaySummary extends StatelessWidget {
             ),
             _StatChip(
               label: 'Spent',
-              value: spend > 0
-                  ? '-₹${spend.toStringAsFixed(0)}'
-                  : '₹0',
-              color: spend > 0
-                  ? VoidColors.danger
-                  : VoidColors.textHint,
-              bg: spend > 0
-                  ? VoidColors.dangerLight
-                  : VoidColors.outlineVariant,
+              value: '₹${spend.toInt()}',
+              color: VoidColors.textPrimary,
+              bg:    VoidColors.outlineVariant,
+              isGradient: false,
             ),
             const SizedBox(width: 10),
             _StatChip(
-              label: 'Received',
-              value: income > 0
-                  ? '+₹${income.toStringAsFixed(0)}'
-                  : '₹0',
+              label: 'Income',
+              value: '₹${income.toInt()}',
               color: income > 0
-                  ? VoidColors.primary
+                  ? Colors.white
                   : VoidColors.textHint,
-              bg: income > 0
-                  ? VoidColors.primaryLight
-                  : VoidColors.outlineVariant,
+              bg: VoidColors.outlineVariant,
+              isGradient: income > 0,
             ),
           ],
         ),
@@ -413,12 +461,14 @@ class _StatChip extends StatelessWidget {
   final String value;
   final Color color;
   final Color bg;
+  final bool isGradient;
 
   const _StatChip({
     required this.label,
     required this.value,
     required this.color,
     required this.bg,
+    this.isGradient = false,
   });
 
   @override
@@ -426,26 +476,39 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: bg,
+        color: isGradient ? null : bg,
+        gradient: isGradient
+            ? const LinearGradient(
+                colors: [Color(0xFFA78BFA), Color(0xFF5B3FD4)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 10,
-                color: VoidColors.textHint,
-                fontWeight: FontWeight.w400,
-              )),
+          Text(
+            label,
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 10,
+              color: isGradient
+                  ? Colors.white70
+                  : VoidColors.textHint,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
           const SizedBox(height: 3),
-          Text(value,
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: color,
-                letterSpacing: -0.4,
-              )),
+          Text(
+            value,
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: -0.4,
+            ),
+          ),
         ],
       ),
     );

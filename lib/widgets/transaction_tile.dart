@@ -21,8 +21,6 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final meta    = categoryMeta(expense.category);
     final isAllow = expense.isAllowance;
-    final color   = isAllow ? VoidColors.primary : VoidColors.textPrimary;
-    final prefix  = isAllow ? '+' : '-';
 
     return Dismissible(
       key: Key(expense.id),
@@ -32,7 +30,7 @@ class TransactionTile extends StatelessWidget {
         alignment: Alignment.centerLeft,
       ),
       secondaryBackground: _swipeBg(
-        color: VoidColors.danger,
+        color: VoidColors.textSecondary,
         icon: Icons.delete_outlined,
         alignment: Alignment.centerRight,
       ),
@@ -61,7 +59,9 @@ class TransactionTile extends StatelessWidget {
               ),
               child: Icon(
                 isAllow ? Icons.savings_outlined : meta.icon,
-                color: isAllow ? VoidColors.primary : VoidColors.iconColor,
+                color: isAllow
+                    ? VoidColors.primary
+                    : VoidColors.iconColor,
                 size: 19,
               ),
             ),
@@ -95,11 +95,11 @@ class TransactionTile extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              '$prefix₹${expense.amount.toStringAsFixed(0)}',
+              '₹${expense.amount.toInt()}',
               style: GoogleFonts.bricolageGrotesque(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: VoidColors.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
