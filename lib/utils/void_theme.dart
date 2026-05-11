@@ -16,13 +16,17 @@ class VoidTheme {
     return base.copyWith(
       scaffoldBackgroundColor: VoidColors.background,
       colorScheme: const ColorScheme.light(
-        primary:        VoidColors.primary,
-        onPrimary:      VoidColors.onPrimary,
-        secondary:      VoidColors.primaryMid,
-        surface:        VoidColors.surface,
-        onSurface:      VoidColors.textPrimary,
-        outline:        VoidColors.outline,
-      ),
+  primary:            VoidColors.primary,
+  onPrimary:          VoidColors.onPrimary,
+  secondary:          VoidColors.primaryMid,
+  surface:            VoidColors.surface,
+  onSurface:          VoidColors.textPrimary,
+  outline:            VoidColors.outline,
+  primaryContainer:   VoidColors.primaryLight,
+  onPrimaryContainer: VoidColors.primary,
+  error:              VoidColors.danger,
+  onError:            VoidColors.onPrimary,
+),
       textTheme: GoogleFonts.bricolageGrotesqueTextTheme(
         base.textTheme,
       ).copyWith(

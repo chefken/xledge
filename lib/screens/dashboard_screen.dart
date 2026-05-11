@@ -633,31 +633,34 @@ class _CalendarSheetState extends State<_CalendarSheet> {
                               GoogleFonts.bricolageGrotesque(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: VoidColors.primary,
                           ),
                           todayDecoration: BoxDecoration(
                             color: VoidColors.primaryLight,
                             shape: BoxShape.circle,
                           ),
                           selectedDecoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFFA78BFA),
-                                Color(0xFF5B3FD4),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          markerDecoration: const BoxDecoration(
-                            color: VoidColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          markerSize: 4,
+  color: VoidColors.primaryLight,
+  shape: BoxShape.circle,
+),
+                          
                           markersMaxCount: 1,
+                  
                           cellMargin: const EdgeInsets.all(4),
                         ),
+                        calendarBuilders: CalendarBuilders(
+  markerBuilder: (context, day, events) {
+    if (events.isEmpty) return const SizedBox.shrink();
+    return Container(
+      width: 4,
+      height: 4,
+      decoration: const BoxDecoration(
+        color: VoidColors.primary,
+        shape: BoxShape.circle,
+      ),
+    );
+  },
+),
                       ),
                     ),
                   ),
@@ -701,18 +704,14 @@ class _CalendarSheetState extends State<_CalendarSheet> {
                             ),
                           ),
                           _MiniChip(
-                            label: 'Spent',
-                            value: daySpend > 0
-                                ? '-₹${daySpend.toStringAsFixed(0)}'
-                                : '₹0',
-                            color: daySpend > 0
-                                ? VoidColors.danger
-                                : VoidColors.textHint,
-                            bg: daySpend > 0
-                                ? VoidColors.dangerLight
-                                : VoidColors.outlineVariant,
-                          ),
-                          const SizedBox(width: 8),
+  label: 'Spent',
+  value: daySpend > 0
+      ? '₹${daySpend.toStringAsFixed(0)}'
+      : '₹0',
+  color: VoidColors.textPrimary,
+  bg: const Color(0xFFF4F4F6),
+),
+const SizedBox(width: 8),
                           _MiniChip(
                             label: 'Allowance',
                             value: dayRecv > 0

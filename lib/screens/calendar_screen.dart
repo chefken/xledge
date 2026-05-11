@@ -83,9 +83,9 @@ class _CalendarScreenState extends State<CalendarScreen>
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: _CalendarCard(
-                  focused:   _focused,
-                  selected:  _selected,
-                  events:    events,
+                  focused:  _focused,
+                  selected: _selected,
+                  events:   events,
                   onDaySelected: (sel, foc) {
                     setState(() {
                       _selected = sel;
@@ -101,14 +101,14 @@ class _CalendarScreenState extends State<CalendarScreen>
             ),
             SliverToBoxAdapter(
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 280),
                 switchInCurve: Curves.easeOutCubic,
                 transitionBuilder: (child, anim) => FadeTransition(
                   opacity: anim,
                   child: SlideTransition(
                     position: Tween(
-                      begin: const Offset(0, 0.04),
-                      end: Offset.zero,
+                      begin: const Offset(0, 0.03),
+                      end:   Offset.zero,
                     ).animate(anim),
                     child: child,
                   ),
@@ -198,30 +198,37 @@ class _CalendarCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: VoidColors.surface,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: VoidColors.shadowMd,
-            blurRadius: 24,
-            offset: Offset(0, 4),
-          ),
-        ],
+Widget build(BuildContext context) {
+  return Container(
+    decoration: BoxDecoration(
+      color: VoidColors.surface,
+      borderRadius: BorderRadius.circular(28),
+      boxShadow: const [
+        BoxShadow(
+          color: VoidColors.shadowMd,
+          blurRadius: 24,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: Theme.of(context).colorScheme.copyWith(
+          primary: VoidColors.primaryLight,
+          onPrimary: VoidColors.primary,
+        ),
       ),
       child: TableCalendar<Expense>(
-        firstDay:     DateTime(2020),
-        lastDay:      DateTime(2030),
-        focusedDay:   focused,
+        firstDay: DateTime(2020),
+        lastDay: DateTime(2030),
+        focusedDay: focused,
         selectedDayPredicate: (d) => isSameDay(d, selected),
         eventLoader: (day) {
           final key = DateTime(day.year, day.month, day.day);
           return events[key] ?? [];
         },
-        onDaySelected:  onDaySelected,
-        onPageChanged:  onPageChanged,
+        onDaySelected: onDaySelected,
+        onPageChanged: onPageChanged,
         calendarFormat: CalendarFormat.month,
         availableCalendarFormats: const {
           CalendarFormat.month: 'Month',
@@ -231,7 +238,8 @@ class _CalendarCard extends StatelessWidget {
           formatButtonVisible: false,
           titleCentered: true,
           leftChevronIcon: Container(
-            width: 34, height: 34,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: VoidColors.outlineVariant,
               borderRadius: BorderRadius.circular(10),
@@ -240,7 +248,8 @@ class _CalendarCard extends StatelessWidget {
                 color: VoidColors.textSecondary, size: 18),
           ),
           rightChevronIcon: Container(
-            width: 34, height: 34,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: VoidColors.outlineVariant,
               borderRadius: BorderRadius.circular(10),
@@ -268,113 +277,58 @@ class _CalendarCard extends StatelessWidget {
             color: VoidColors.textHint,
           ),
         ),
-        calendarStyle: const CalendarStyle(
+        calendarStyle: CalendarStyle(
           outsideDaysVisible: false,
-          cellMargin: EdgeInsets.all(4),
-          markersMaxCount: 0,
+          selectedDecoration: const BoxDecoration(
+            color: VoidColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          selectedTextStyle: GoogleFonts.bricolageGrotesque(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: VoidColors.primary,
+          ),
+          isTodayHighlighted: true,
+          todayDecoration: const BoxDecoration(
+            color: VoidColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          todayTextStyle: GoogleFonts.bricolageGrotesque(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: VoidColors.primary,
+          ),
+          defaultDecoration: const BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          defaultTextStyle: GoogleFonts.bricolageGrotesque(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: VoidColors.textPrimary,
+          ),
+          weekendDecoration: const BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          weekendTextStyle: GoogleFonts.bricolageGrotesque(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: VoidColors.textPrimary,
+          ),
+          markerDecoration: const BoxDecoration(
+            color: VoidColors.primary,
+            shape: BoxShape.circle,
+          ),
+          markersMaxCount: 1,
+          markerSize: 4,
+          markerMargin: const EdgeInsets.only(top: 2),
+          cellMargin: const EdgeInsets.all(4),
         ),
-        calendarBuilders: CalendarBuilders<Expense>(
-          defaultBuilder: (context, day, focusedDay) => _DayCell(
-            day:      day,
-            selected: false,
-            today:    false,
-            hasEvent: events.containsKey(
-                DateTime(day.year, day.month, day.day)),
-          ),
-          todayBuilder: (context, day, focusedDay) => _DayCell(
-            day:      day,
-            selected: false,
-            today:    true,
-            hasEvent: events.containsKey(
-                DateTime(day.year, day.month, day.day)),
-          ),
-          selectedBuilder: (context, day, focusedDay) => _DayCell(
-            day:      day,
-            selected: true,
-            today:    false,
-            hasEvent: events.containsKey(
-                DateTime(day.year, day.month, day.day)),
-          ),
-          outsideBuilder: (context, day, focusedDay) =>
-              const SizedBox.shrink(),
-        ),
-      ),
-    );
-  }
+      ),   // closes TableCalendar
+    ),     // closes Theme
+  );       // closes Container
 }
-
-class _DayCell extends StatelessWidget {
-  final DateTime day;
-  final bool selected;
-  final bool today;
-  final bool hasEvent;
-
-  const _DayCell({
-    required this.day,
-    required this.selected,
-    required this.today,
-    required this.hasEvent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final highlight = selected || today;
-
-    return Center(
-      child: SizedBox(
-        width: 36,
-        height: 36,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: highlight
-                    ? VoidColors.primaryLight
-                    : Colors.transparent,
-                shape: BoxShape.circle,
-              ),
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '${day.day}',
-                  style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 13,
-                    fontWeight: highlight
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                    color: highlight
-                        ? VoidColors.primary
-                        : VoidColors.textPrimary,
-                    height: 1.0,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                SizedBox(
-                  width: 4,
-                  height: 4,
-                  child: hasEvent
-                      ? DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: VoidColors.primary.withOpacity(
-                                highlight ? 0.8 : 0.4),
-                            shape: BoxShape.circle,
-                          ),
-                        )
-                      : null,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _DaySummary extends StatelessWidget {
@@ -432,22 +386,19 @@ class _DaySummary extends StatelessWidget {
                 ],
               ),
             ),
+            // ── FIX 4: Spent chip — white gradient, dark text, no red ──
             _StatChip(
-              label: 'Spent',
-              value: '₹${spend.toInt()}',
-              color: VoidColors.textPrimary,
-              bg:    VoidColors.outlineVariant,
-              isGradient: false,
+              label:       'Spent',
+              value:       '₹${spend.toInt()}',
+              isAllowance: false,
             ),
             const SizedBox(width: 10),
+            // ── Allowance chip — light purple gradient, purple text ──
             _StatChip(
-              label: 'Income',
-              value: '₹${income.toInt()}',
-              color: income > 0
-                  ? Colors.white
-                  : VoidColors.textHint,
-              bg: VoidColors.outlineVariant,
-              isGradient: income > 0,
+              label:       'Allowance',
+              value:       '₹${income.toInt()}',
+              isAllowance: true,
+              hasValue:    income > 0,
             ),
           ],
         ),
@@ -459,16 +410,14 @@ class _DaySummary extends StatelessWidget {
 class _StatChip extends StatelessWidget {
   final String label;
   final String value;
-  final Color color;
-  final Color bg;
-  final bool isGradient;
+  final bool isAllowance;
+  final bool hasValue;
 
   const _StatChip({
     required this.label,
     required this.value,
-    required this.color,
-    required this.bg,
-    this.isGradient = false,
+    required this.isAllowance,
+    this.hasValue = false,
   });
 
   @override
@@ -476,15 +425,27 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isGradient ? null : bg,
-        gradient: isGradient
+        gradient: isAllowance
+            // Light purple gradient for Allowance
             ? const LinearGradient(
-                colors: [Color(0xFFA78BFA), Color(0xFF5B3FD4)],
+                colors: [Color(0xFFEDE8FF), Color(0xFFD8CCFF)],
                 begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                end:   Alignment.bottomRight,
               )
-            : null,
+            // White gradient for Spent — no red anywhere
+            : const LinearGradient(
+                colors: [Color(0xFFFFFFFF), Color(0xFFF4F4F6)],
+                begin: Alignment.topLeft,
+                end:   Alignment.bottomRight,
+              ),
         borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,10 +454,10 @@ class _StatChip extends StatelessWidget {
             label,
             style: GoogleFonts.bricolageGrotesque(
               fontSize: 10,
-              color: isGradient
-                  ? Colors.white70
-                  : VoidColors.textHint,
               fontWeight: FontWeight.w400,
+              color: isAllowance
+                  ? VoidColors.primary.withOpacity(0.7)
+                  : VoidColors.textHint,
             ),
           ),
           const SizedBox(height: 3),
@@ -505,8 +466,11 @@ class _StatChip extends StatelessWidget {
             style: GoogleFonts.bricolageGrotesque(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: color,
               letterSpacing: -0.4,
+              // Explicitly set — no theme inheritance, no red
+              color: isAllowance
+                  ? VoidColors.primary        // purple for Allowance
+                  : VoidColors.textPrimary,   // dark for Spent
             ),
           ),
         ],
