@@ -22,7 +22,7 @@ class GradientCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: colors ??
-              [VoidColors.gradientStart, VoidColors.gradientEnd],
+              [VoidColors.gradStart, VoidColors.gradEnd],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

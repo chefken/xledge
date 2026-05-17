@@ -61,5 +61,5 @@ CategoryMeta categoryMeta(String category) =>
     const CategoryMeta(
       color: VoidColors.iconColor,
       lightColor: VoidColors.iconBg,
-      icon: Icons.circle_outlined,
+      icon: Icons.label_outline_rounded,
     );

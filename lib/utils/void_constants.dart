@@ -1,7 +1,7 @@
 class HiveBoxes {
   HiveBoxes._();
-  static const expenses = 'expenses';
-  static const debts    = 'debts';
+  static const expenses  = 'expenses';
+  static const debts     = 'debts';
 }
 
 class ExpenseCategory {

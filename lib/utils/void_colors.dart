@@ -16,8 +16,8 @@ class VoidColors {
   static const primaryGlow     = Color(0x407C5CFC);
   static const onPrimary       = Color(0xFFFFFFFF);
 
-  static const gradientStart       = Color(0xFF9B7EF8);
-  static const gradientEnd         = Color(0xFF5B3FD4);
+  static const gradStart       = Color(0xFF9B7EF8);
+  static const gradEnd         = Color(0xFF5B3FD4);
   static const cardDark1       = Color(0xFF1A1830);
   static const cardDark2       = Color(0xFF2D2A50);
   static const cardDark3       = Color(0xFF3D3870);
@@ -42,5 +42,14 @@ class VoidColors {
   static const shadowLg        = Color(0x1A000000);
   static const shadowPurple    = Color(0x286C3CE1);
 
-  
+  static const darkBg          = Color(0xFF0F0E17);
+  static const darkSurface     = Color(0xFF1A1825);
+  static const darkCard        = Color(0xFF221F32);
+  static const darkBorder      = Color(0xFF2E2A42);
+  static const darkBorderLight = Color(0xFF3A3550);
+  static const darkTextPrimary = Color(0xFFF0EEFF);
+  static const darkTextSecondary = Color(0xFF9490B0);
+  static const darkTextHint    = Color(0xFF5A5670);
+  static const darkIconBg      = Color(0xFF2A2640);
+  static const darkIconColor   = Color(0xFFB8B4D8);
 }

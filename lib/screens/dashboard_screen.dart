@@ -8,6 +8,7 @@ import 'package:xledge/utils/void_text_styles.dart';
 import 'package:xledge/widgets/transaction_tile.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:xledge/models/expense_model.dart';
+import 'package:xledge/services/user_prefs_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onSeeAll;
@@ -112,12 +113,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends StatefulWidget {
   final VoidCallback onCalendar;
   const _Header({required this.onCalendar});
 
   @override
+  State<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends State<_Header> {
+  String _name = UserPrefsService.username;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setState(() => _name = UserPrefsService.username);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final txPri  = isDark ? VoidColors.darkTextPrimary   : VoidColors.textPrimary;
+    final txSec  = isDark ? VoidColors.darkTextSecondary : VoidColors.textSecondary;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
       child: Row(
@@ -127,30 +145,26 @@ class _Header extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Hello,',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w300,
-                  color: VoidColors.textSecondary,
-                  letterSpacing: 0.1,
-                  height: 1.2,
-                ),
-              ),
+              Text('Hello,',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w300,
+                    color: txSec,
+                    letterSpacing: 0.1,
+                    height: 1.2,
+                  )),
               const SizedBox(height: 2),
-              Text(
-                'Chef',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 38,
-                  fontWeight: FontWeight.w600,
-                  color: VoidColors.textPrimary,
-                  letterSpacing: -1.5,
-                  height: 1.0,
-                ),
-              ),
+              Text(_name,
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 38,
+                    fontWeight: FontWeight.w600,
+                    color: txPri,
+                    letterSpacing: -1.5,
+                    height: 1.0,
+                  )),
             ],
           ),
-          _CalendarButton(onTap: onCalendar),
+          _CalendarButton(onTap: widget.onCalendar),
         ],
       ),
     );

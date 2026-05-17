@@ -7,6 +7,7 @@ import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_text_styles.dart';
 import 'package:xledge/widgets/void_card.dart';
+import 'package:xledge/screens/settings_screen.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -22,10 +23,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
   Widget build(BuildContext context) {
     return Consumer<VoidProvider>(
       builder: (context, provider, _) {
-        final analysis  = provider.analysis;
-        final hasData   = analysis?.hasData ?? false;
-        final now       = DateTime.now();
-        final yearData  = List.generate(now.month, (i) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final bg = isDark ? VoidColors.darkBg : VoidColors.background;
+        final analysis = provider.analysis;
+        final hasData = analysis?.hasData ?? false;
+        final now = DateTime.now();
+        final yearData = List.generate(now.month, (i) {
           final m = i + 1;
           return provider
               .getAllExpensesForMonth(now.year, m)
@@ -34,38 +37,71 @@ class _ActivityScreenState extends State<ActivityScreen> {
         });
 
         return Scaffold(
-          backgroundColor: VoidColors.background,
+          backgroundColor: bg,
           body: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
-                child: Padding(
+                child: // Replace the header Row in activity_screen.dart:
+                Padding(
                   padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                       Text('Activity',
-                          style: VoidTextStyles.headlineLarge),
-                      GestureDetector(
-                        onTap: hasData
-                            ? () => _exportPdf(context, provider)
-                            : null,
-                        child: Container(
-                          width: 42, height: 42,
-                          decoration: BoxDecoration(
-                            color: hasData
-                                ? VoidColors.primaryLight
-                                : VoidColors.outlineVariant,
-                            borderRadius: BorderRadius.circular(13),
+                      Text('Activity', style: VoidTextStyles.headlineLarge),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: hasData
+                                ? () => _exportPdf(context, provider)
+                                : null,
+                            child: Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: hasData
+                                    ? VoidColors.primaryLight
+                                    : (isDark
+                                          ? VoidColors.darkCard
+                                          : VoidColors.outlineVariant),
+                                borderRadius: BorderRadius.circular(13),
+                              ),
+                              child: Icon(
+                                Icons.ios_share_rounded,
+                                color: hasData
+                                    ? VoidColors.primary
+                                    : VoidColors.textHint,
+                                size: 17,
+                              ),
+                            ),
                           ),
-                          child: Icon(
-                            Icons.ios_share_rounded,
-                            color: hasData
-                                ? VoidColors.primary
-                                : VoidColors.textHint,
-                            size: 17,
+                          const SizedBox(width: 10),
+                          GestureDetector(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsScreen(),
+                              ),
+                            ),
+                            child: Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? VoidColors.darkCard
+                                    : VoidColors.outlineVariant,
+                                borderRadius: BorderRadius.circular(13),
+                              ),
+                              child: Icon(
+                                Icons.settings_outlined,
+                                color: isDark
+                                    ? VoidColors.darkTextSecondary
+                                    : VoidColors.textSecondary,
+                                size: 18,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -83,13 +119,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: VoidCard(
-  padding: const EdgeInsets.all(20),
-  child: _MonthlyBarGraph(data: yearData),
-),
+                      padding: const EdgeInsets.all(20),
+                      child: _MonthlyBarGraph(data: yearData),
+                    ),
                   ),
                 ),
               ],
-              
+
               if (hasData) ...[
                 _SectionTitle('Spending Mix'),
                 SliverToBoxAdapter(
@@ -104,16 +140,14 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             height: 140,
                             child: _MonoDonut(
                               analysis: analysis!,
-                              touched:  _touched,
-                              onTouch:  (i) =>
-                                  setState(() => _touched = i),
+                              touched: _touched,
+                              onTouch: (i) => setState(() => _touched = i),
                             ),
                           ),
                           const SizedBox(width: 20),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: analysis!.categoryBreakdown
                                   .take(4)
                                   .map((c) => _LegendRow(cat: c))
@@ -134,8 +168,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         cat: analysis!.categoryBreakdown[i],
                         isTop: i == 0,
                       ),
-                      childCount:
-                          analysis!.categoryBreakdown.length,
+                      childCount: analysis!.categoryBreakdown.length,
                     ),
                   ),
                 ),
@@ -143,12 +176,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                     child: _ReflectionCard(
-                        provider: provider, analysis: analysis!),
+                      provider: provider,
+                      analysis: analysis!,
+                    ),
                   ),
                 ),
               ],
-              if (!hasData)
-                SliverFillRemaining(child: _EmptyActivity()),
+              if (!hasData) SliverFillRemaining(child: _EmptyActivity()),
               const SliverToBoxAdapter(child: SizedBox(height: 130)),
             ],
           ),
@@ -158,7 +192,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 
   List<String> _generateInsights(VoidProvider provider, DateTime now) {
-    final expenses = provider.getAllExpensesForMonth(now.year, now.month)
+    final expenses = provider
+        .getAllExpensesForMonth(now.year, now.month)
         .where((e) => !e.isAllowance)
         .toList();
 
@@ -174,55 +209,65 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final quietDays = totalDays - lowDays.length;
     if (quietDays > 0) {
       insights.add(
-          'You had $quietDays quiet days with no spending this month.');
+        'You had $quietDays quiet days with no spending this month.',
+      );
     }
 
     final weekendSpend = expenses
-        .where((e) =>
-            e.date.weekday == DateTime.saturday ||
-            e.date.weekday == DateTime.sunday)
+        .where(
+          (e) =>
+              e.date.weekday == DateTime.saturday ||
+              e.date.weekday == DateTime.sunday,
+        )
         .fold(0.0, (s, e) => s + e.amount);
 
     final weekdaySpend = expenses
-        .where((e) =>
-            e.date.weekday != DateTime.saturday &&
-            e.date.weekday != DateTime.sunday)
+        .where(
+          (e) =>
+              e.date.weekday != DateTime.saturday &&
+              e.date.weekday != DateTime.sunday,
+        )
         .fold(0.0, (s, e) => s + e.amount);
 
     if (weekendSpend > weekdaySpend * 0.4) {
       insights.add(
-          'Weekends accounted for a notable portion of your spending.');
+        'Weekends accounted for a notable portion of your spending.',
+      );
     }
 
     final analysis = provider.analysis;
     if (analysis != null && analysis.primaryLeak != null) {
       insights.add(
-          '${analysis.primaryLeak} is your primary spending category at '
-          '${analysis.primaryLeakPercentage!.toStringAsFixed(0)}% of total.');
+        '${analysis.primaryLeak} is your primary spending category at '
+        '${analysis.primaryLeakPercentage!.toStringAsFixed(0)}% of total.',
+      );
     }
 
     final net = provider.netBalance;
     if (net > 0) {
       insights.add(
-          'You are ₹${net.toStringAsFixed(0)} in the green this month.');
+        'You are ₹${net.toStringAsFixed(0)} in the green this month.',
+      );
     } else if (net < 0) {
       insights.add(
-          'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.');
+        'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.',
+      );
     }
 
     return insights;
   }
 
-  Future<void> _exportPdf(
-      BuildContext context, VoidProvider provider) async {
+  Future<void> _exportPdf(BuildContext context, VoidProvider provider) async {
     final analysis = provider.analysis;
     if (analysis == null) return;
     await PdfService.generateMonthlyReport(
-      month:          provider.selectedMonth,
-      year:           provider.selectedYear,
-      expenses:       provider.getAllExpensesForMonth(
-                          provider.selectedYear, provider.selectedMonth),
-      analysis:       analysis,
+      month: provider.selectedMonth,
+      year: provider.selectedYear,
+      expenses: provider.getAllExpensesForMonth(
+        provider.selectedYear,
+        provider.selectedMonth,
+      ),
+      analysis: analysis,
       totalAllowance: provider.totalAllowance,
     );
   }
@@ -234,16 +279,20 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
-        child: Text(text,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: VoidColors.textPrimary,
-              letterSpacing: -0.2,
-            )),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
+            letterSpacing: -0.2,
+          ),
+        ),
       ),
     );
   }
@@ -256,8 +305,19 @@ class _MonthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final net = provider.netBalance;
     final pos = net >= 0;
@@ -297,7 +357,8 @@ class _MonthCard extends StatelessWidget {
               Expanded(
                 child: _MonthStat(
                   label: 'Spent',
-                  value: '₹${(provider.analysis?.totalSpend ?? 0).toStringAsFixed(0)}',
+                  value:
+                      '₹${(provider.analysis?.totalSpend ?? 0).toStringAsFixed(0)}',
                 ),
               ),
               Expanded(
@@ -330,21 +391,25 @@ class _MonthStat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-              fontSize: 10,
-              color: Colors.white38,
-              fontWeight: FontWeight.w400,
-              letterSpacing: 0.3,
-            )),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.white38,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0.3,
+          ),
+        ),
         const SizedBox(height: 5),
-        Text(value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: -0.6,
-            )),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: -0.6,
+          ),
+        ),
       ],
     );
   }
@@ -361,7 +426,7 @@ class _MonthlyBarGraph extends StatefulWidget {
 class _MonthlyBarGraphState extends State<_MonthlyBarGraph>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double>   _anim;
+  late final Animation<double> _anim;
   int _tapped = -1;
 
   @override
@@ -375,11 +440,14 @@ class _MonthlyBarGraphState extends State<_MonthlyBarGraph>
   }
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    const labels = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
     final max = widget.data.isEmpty
         ? 1.0
         : widget.data.reduce((a, b) => a > b ? a : b);
@@ -392,30 +460,29 @@ class _MonthlyBarGraphState extends State<_MonthlyBarGraph>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: List.generate(widget.data.length, (i) {
-              final val        = widget.data[i];
-              final ratio      = max > 0 ? val / max : 0.0;
-              final animRatio  = ratio * _anim.value;
-              final isTapped   = _tapped == i;
-              final intensity  = ratio.clamp(0.15, 1.0);
+              final val = widget.data[i];
+              final ratio = max > 0 ? val / max : 0.0;
+              final animRatio = ratio * _anim.value;
+              final isTapped = _tapped == i;
+              final intensity = ratio.clamp(0.15, 1.0);
 
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => setState(() =>
-                      _tapped = isTapped ? -1 : i),
+                  onTap: () => setState(() => _tapped = isTapped ? -1 : i),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       if (isTapped)
                         Padding(
-                          padding:
-                              const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.only(bottom: 4),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 3),
+                              horizontal: 6,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: VoidColors.primary,
-                              borderRadius:
-                                  BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               '₹${val.toStringAsFixed(0)}',
@@ -429,19 +496,19 @@ class _MonthlyBarGraphState extends State<_MonthlyBarGraph>
                           ),
                         ),
                       Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
                         child: AnimatedContainer(
-                          duration:
-                              const Duration(milliseconds: 200),
+                          duration: const Duration(milliseconds: 200),
                           height: (animRatio * 120).clamp(4.0, 120.0),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
                                 VoidColors.primary.withOpacity(
-                                    0.3 + intensity * 0.7),
+                                  0.3 + intensity * 0.7,
+                                ),
                                 VoidColors.primaryDark.withOpacity(
-                                    0.4 + intensity * 0.6),
+                                  0.4 + intensity * 0.6,
+                                ),
                               ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -501,24 +568,30 @@ class _InsightTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 32, height: 32,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: VoidColors.primaryLight,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.lightbulb_outline_rounded,
-                color: VoidColors.primary, size: 15),
+            child: const Icon(
+              Icons.lightbulb_outline_rounded,
+              color: VoidColors.primary,
+              size: 15,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(text,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: VoidColors.textPrimary,
-                  fontWeight: FontWeight.w400,
-                  height: 1.45,
-                  letterSpacing: -0.1,
-                )),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                color: VoidColors.textPrimary,
+                fontWeight: FontWeight.w400,
+                height: 1.45,
+                letterSpacing: -0.1,
+              ),
+            ),
           ),
         ],
       ),
@@ -550,26 +623,27 @@ class _MonoDonut extends StatelessWidget {
 
     final sections = <PieChartSectionData>[];
     for (int i = 0; i < analysis.categoryBreakdown.length; i++) {
-      final c       = analysis.categoryBreakdown[i];
+      final c = analysis.categoryBreakdown[i];
       final isTouched = i == touched;
-      sections.add(PieChartSectionData(
-        value:     c.percentage,
-        color:     shades[i % shades.length],
-        radius:    isTouched ? 52 : 42,
-        title:     '',
-        showTitle: false,
-      ));
+      sections.add(
+        PieChartSectionData(
+          value: c.percentage,
+          color: shades[i % shades.length],
+          radius: isTouched ? 52 : 42,
+          title: '',
+          showTitle: false,
+        ),
+      );
     }
 
     return PieChart(
       PieChartData(
-        sections:          sections,
+        sections: sections,
         centerSpaceRadius: 32,
-        sectionsSpace:     2,
+        sectionsSpace: 2,
         pieTouchData: PieTouchData(
           touchCallback: (e, r) {
-            if (!e.isInterestedForInteractions ||
-                r?.touchedSection == null) {
+            if (!e.isInterestedForInteractions || r?.touchedSection == null) {
               onTouch(-1);
               return;
             }
@@ -600,11 +674,9 @@ class _LegendRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 8, height: 8,
-            decoration: BoxDecoration(
-              color: shades[0],
-              shape: BoxShape.circle,
-            ),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: shades[0], shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -661,7 +733,8 @@ class _CatInterpretRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 38, height: 38,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: isTop
                   ? VoidColors.primary.withOpacity(0.12)
@@ -679,15 +752,15 @@ class _CatInterpretRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(cat.category,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isTop
-                          ? VoidColors.primary
-                          : VoidColors.textPrimary,
-                      letterSpacing: -0.1,
-                    )),
+                Text(
+                  cat.category,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isTop ? VoidColors.primary : VoidColors.textPrimary,
+                    letterSpacing: -0.1,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   isTop
@@ -709,9 +782,7 @@ class _CatInterpretRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: isTop
-                  ? VoidColors.primary
-                  : VoidColors.textPrimary,
+              color: isTop ? VoidColors.primary : VoidColors.textPrimary,
               letterSpacing: -0.3,
             ),
           ),
@@ -724,20 +795,28 @@ class _CatInterpretRow extends StatelessWidget {
 class _ReflectionCard extends StatelessWidget {
   final VoidProvider provider;
   final dynamic analysis;
-  const _ReflectionCard({
-    required this.provider,
-    required this.analysis,
-  });
+  const _ReflectionCard({required this.provider, required this.analysis});
 
   @override
   Widget build(BuildContext context) {
     const months = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     final month = months[provider.selectedMonth];
-    final leak  = analysis.primaryLeak ?? 'various categories';
-    final net   = provider.netBalance;
+    final leak = analysis.primaryLeak ?? 'various categories';
+    final net = provider.netBalance;
     final netStr = net >= 0
         ? 'You stayed in the green by ₹${net.toStringAsFixed(0)}.'
         : 'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.';
@@ -756,22 +835,26 @@ class _ReflectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Monthly Reflection',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: VoidColors.textHint,
-                letterSpacing: 0.3,
-              )),
+          const Text(
+            'Monthly Reflection',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: VoidColors.textHint,
+              letterSpacing: 0.3,
+            ),
+          ),
           const SizedBox(height: 10),
-          Text(reflection,
-              style: const TextStyle(
-                fontSize: 14,
-                color: VoidColors.textPrimary,
-                fontWeight: FontWeight.w400,
-                height: 1.55,
-                letterSpacing: -0.1,
-              )),
+          Text(
+            reflection,
+            style: const TextStyle(
+              fontSize: 14,
+              color: VoidColors.textPrimary,
+              fontWeight: FontWeight.w400,
+              height: 1.55,
+              letterSpacing: -0.1,
+            ),
+          ),
         ],
       ),
     );
@@ -781,24 +864,47 @@ class _ReflectionCard extends StatelessWidget {
 class _EmptyActivity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 60, height: 60,
+          width: 60,
+          height: 60,
           decoration: BoxDecoration(
             color: VoidColors.primaryLight,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: const Icon(Icons.bar_chart_rounded,
-              color: VoidColors.primary, size: 26),
+          child: const Icon(
+            Icons.bar_chart_rounded,
+            color: VoidColors.primary,
+            size: 26,
+          ),
         ),
         const SizedBox(height: 14),
-        Text('No data yet', style: VoidTextStyles.titleMedium),
+
+        Text(
+          'No data yet',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
+          ),
+        ),
+
         const SizedBox(height: 6),
-        Text('Add expenses to see your monthly report',
-            style: VoidTextStyles.bodyMedium,
-            textAlign: TextAlign.center),
+
+        Text(
+          'Add expenses to see your monthly report',
+          style: TextStyle(
+            fontSize: 14,
+            color: isDark
+                ? VoidColors.darkTextSecondary
+                : VoidColors.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }

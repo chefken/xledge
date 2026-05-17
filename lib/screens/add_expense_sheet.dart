@@ -6,6 +6,8 @@ import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_constants.dart';
 import 'package:xledge/utils/void_text_styles.dart';
+import 'package:xledge/services/category_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AddExpenseSheet extends StatefulWidget {
   final Expense? existingExpense;
@@ -310,6 +312,9 @@ class _Pill extends StatelessWidget {
   }
 }
 
+
+
+// Replace _CategoryGrid with this:
 class _CategoryGrid extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onSelect;
@@ -321,66 +326,239 @@ class _CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 0.9,
-      ),
-      itemCount: ExpenseCategory.all.length,
-      itemBuilder: (_, i) {
-        final cat    = ExpenseCategory.all[i];
-        final meta   = categoryMeta(cat);
-        final active = selected == cat;
-        return GestureDetector(
-          onTap: () => onSelect(cat),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              color: active
-                  ? VoidColors.primaryLight
-                  : VoidColors.outlineVariant,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: active
-                    ? VoidColors.primary.withOpacity(0.4)
-                    : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  meta.icon,
-                  size: 20,
-                  color: active
-                      ? VoidColors.primary
-                      : VoidColors.iconColor,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  cat,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                    color: active
-                        ? VoidColors.primary
-                        : VoidColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+    final isDark    = Theme.of(context).brightness == Brightness.dark;
+    final fill      = isDark ? VoidColors.darkCard    : VoidColors.outlineVariant;
+    final border    = isDark ? VoidColors.darkBorder  : Colors.transparent;
+    final iconCol   = isDark ? VoidColors.darkIconColor : VoidColors.iconColor;
+
+    return Consumer<CategoryService>(
+      builder: (context, catService, _) {
+        final cats = catService.all;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            childAspectRatio: 0.9,
           ),
+          itemCount: cats.length + 1,
+          itemBuilder: (_, i) {
+            if (i == cats.length) {
+              return GestureDetector(
+                onTap: () => _showAddCategory(context, catService),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: fill,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                        color: VoidColors.primary.withOpacity(0.3),
+                        width: 1.5),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_rounded,
+                          size: 20,
+                          color: VoidColors.primary),
+                      const SizedBox(height: 6),
+                      Text('Add',
+                          style: GoogleFonts.bricolageGrotesque(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: VoidColors.primary,
+                          ),
+                          textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final cat    = cats[i];
+            final meta   = categoryMeta(cat);
+            final active = selected == cat;
+
+            return GestureDetector(
+              onTap: () => onSelect(cat),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                decoration: BoxDecoration(
+                  color: active
+                      ? VoidColors.primaryLight
+                      : fill,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: active
+                        ? VoidColors.primary.withOpacity(0.4)
+                        : border,
+                    width: 1.5,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      meta.icon,
+                      size: 20,
+                      color: active
+                          ? VoidColors.primary
+                          : iconCol,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(cat,
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w500,
+                          color: active
+                              ? VoidColors.primary
+                              : (isDark
+                                  ? VoidColors.darkTextSecondary
+                                  : VoidColors.textSecondary),
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
+    );
+  }
+
+  void _showAddCategory(
+      BuildContext context, CategoryService service) {
+    final ctrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 36),
+          decoration: BoxDecoration(
+            color: isDark ? VoidColors.darkSurface : VoidColors.surface,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36, height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? VoidColors.darkBorder
+                        : VoidColors.outline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text('New Category',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? VoidColors.darkTextPrimary
+                        : VoidColors.textPrimary,
+                    letterSpacing: -0.4,
+                  )),
+              const SizedBox(height: 18),
+              TextField(
+                controller: ctrl,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 15,
+                  color: isDark
+                      ? VoidColors.darkTextPrimary
+                      : VoidColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Subscriptions, Pets...',
+                  hintStyle: GoogleFonts.bricolageGrotesque(
+                    fontSize: 15,
+                    color: isDark
+                        ? VoidColors.darkTextHint
+                        : VoidColors.textHint,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () async {
+                  final ok = await service.addCategory(ctrl.text);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    if (!ok) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Category already exists',
+                              style: GoogleFonts.bricolageGrotesque(
+                                  color: Colors.white)),
+                          backgroundColor: VoidColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(14)),
+                          margin: const EdgeInsets.all(16),
+                        ),
+                      );
+                    } else {
+                      onSelect(ctrl.text.trim());
+                    }
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFA78BFA),
+                        Color(0xFF5B3FD4),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(100),
+                    boxShadow: [
+                      BoxShadow(
+                        color: VoidColors.primary.withOpacity(0.3),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Text('Create Category',
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        letterSpacing: -0.2,
+                      )),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -443,8 +621,8 @@ class _SubmitButtonState extends State<_SubmitButton>
                       const Color(0xFF7C5CFC),
                     ]
                   : [
-                      VoidColors.gradientStart,
-                      VoidColors.gradientEnd,
+                      VoidColors.gradStart,
+                      VoidColors.gradEnd,
                     ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,

@@ -400,7 +400,7 @@ class _MiniPurpleFab extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 98),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [VoidColors.gradientStart, VoidColors.gradientEnd],
+            colors: [VoidColors.gradStart, VoidColors.gradEnd],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
