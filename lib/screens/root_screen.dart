@@ -9,6 +9,7 @@ import 'package:xledge/screens/dashboard_screen.dart';
 import 'package:xledge/screens/debts_screen.dart';
 import 'package:xledge/screens/expenses_screen.dart';
 import 'package:xledge/utils/void_colors.dart';
+import 'package:xledge/utils/theme_ext.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
@@ -85,7 +86,7 @@ Widget _screen() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VoidColors.background,
+      backgroundColor: context.xBg,
       extendBody: true,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 350),

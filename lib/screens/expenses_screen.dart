@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/providers/void_provider.dart';
 import 'package:xledge/screens/add_expense_sheet.dart';
+import 'package:xledge/utils/theme_ext.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_text_styles.dart';
 import 'package:xledge/widgets/transaction_tile.dart';
@@ -32,7 +34,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         final dates   = grouped.keys.toList();
 
         return Scaffold(
-          backgroundColor: VoidColors.background,
+          backgroundColor: context.xBg,
           floatingActionButton: _MiniPurpleFab(
             onTap: () => _addSheet(context),
           ),
@@ -41,13 +43,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.fromLTRB(24, 64, 24, 20),
+                  padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
                   child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                       Text('Expenses',
+                      Text('Expenses',
                           style: VoidTextStyles.headlineLarge),
                       _FilterChip(
                         label:
@@ -61,7 +61,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               grouped.isEmpty
                   ? SliverFillRemaining(child: _Empty())
                   : SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 24),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (_, i) {
@@ -70,22 +71,26 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             final net   = items.fold(
                               0.0,
                               (s, e) => s +
-                                  (e.isAllowance ? e.amount : -e.amount),
+                                  (e.isAllowance
+                                      ? e.amount
+                                      : -e.amount),
                             );
                             return _DateSection(
-                              date:  date,
-                              net:   net,
-                              items: items,
+                              date:     date,
+                              net:      net,
+                              items:    items,
                               onDelete: (id) =>
                                   provider.deleteExpense(id),
-                              onEdit: (e) => _editSheet(context, e),
+                              onEdit:   (e) =>
+                                  _editSheet(context, e),
                             );
                           },
                           childCount: dates.length,
                         ),
                       ),
                     ),
-              const SliverToBoxAdapter(child: SizedBox(height: 130)),
+              const SliverToBoxAdapter(
+                  child: SizedBox(height: 130)),
             ],
           ),
         );
@@ -155,20 +160,22 @@ class _DateSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(date,
-                style: VoidTextStyles.labelLarge.copyWith(
-                  color: VoidColors.textHint,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: context.xTxHint,
                   letterSpacing: 0.3,
                 )),
             Text(
-  '${net >= 0 ? '+' : '-'}₹${net.abs().toStringAsFixed(0)}',
-  style: TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    color: net >= 0
-        ? VoidColors.primary
-        : VoidColors.textPrimary,
-  ),
-),
+              '₹${net.abs().toInt()}',
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: net >= 0
+                    ? VoidColors.primary
+                    : context.xTxPri,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -192,7 +199,8 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: VoidColors.primaryLight,
           borderRadius: BorderRadius.circular(100),
@@ -201,7 +209,7 @@ class _FilterChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(label,
-                style: const TextStyle(
+                style: GoogleFonts.bricolageGrotesque(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: VoidColors.primary,
@@ -244,9 +252,10 @@ class _FilterSheetState extends State<_FilterSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 40),
-      decoration: const BoxDecoration(
-        color: VoidColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: context.xSurface,
+        borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(28)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -257,17 +266,27 @@ class _FilterSheetState extends State<_FilterSheet> {
               width: 36, height: 4,
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
-                color: VoidColors.outline,
+                color: context.xBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          Text('Filter by Month', style: VoidTextStyles.titleLarge),
+          Text('Filter by Month',
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: context.xTxPri,
+                letterSpacing: -0.2,
+              )),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Year', style: VoidTextStyles.bodyMedium),
+              Text('Year',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 13,
+                    color: context.xTxSec,
+                  )),
               Row(
                 children: [
                   _ChipBtn(
@@ -275,10 +294,14 @@ class _FilterSheetState extends State<_FilterSheet> {
                     onTap: () => setState(() => _year--),
                   ),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16),
                     child: Text('$_year',
-                        style: VoidTextStyles.titleMedium),
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: context.xTxPri,
+                        )),
                   ),
                   _ChipBtn(
                     label: '>',
@@ -301,17 +324,19 @@ class _FilterSheetState extends State<_FilterSheet> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 9),
                   decoration: BoxDecoration(
-                    color:  active ? VoidColors.primary : VoidColors.outlineVariant,
+                    color: active
+                        ? VoidColors.primary
+                        : context.xFill,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
                     _monthNames[i].substring(0, 3),
-                    style: TextStyle(
+                    style: GoogleFonts.bricolageGrotesque(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: active
                           ? Colors.white
-                          : VoidColors.textSecondary,
+                          : context.xTxSec,
                     ),
                   ),
                 ),
@@ -320,41 +345,40 @@ class _FilterSheetState extends State<_FilterSheet> {
           ),
           const SizedBox(height: 28),
           GestureDetector(
-  onTap: () {
-    widget.provider.setMonth(_year, _month);
-    Navigator.pop(context);
-  },
-  child: Container(
-    width: double.infinity,
-    padding: const EdgeInsets.symmetric(vertical: 17),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFFA78BFA), Color(0xFF6C3CE1)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(100),
-      boxShadow: [
-        BoxShadow(
-          color: VoidColors.primary.withOpacity(0.26),
-          blurRadius: 16,
-          offset: const Offset(0, 5),
-        ),
-      ],
-    ),
-    alignment: Alignment.center,
-    child: const Text(
-      'Apply',
-      style: TextStyle(
-        fontFamily: 'BricolageGrotesque',
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-        letterSpacing: -0.1,
-      ),
-    ),
-  ),
-),
+            onTap: () {
+              widget.provider.setMonth(_year, _month);
+              Navigator.pop(context);
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 17),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFA78BFA), Color(0xFF6C3CE1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(100),
+                boxShadow: [
+                  BoxShadow(
+                    color: VoidColors.primary.withOpacity(0.26),
+                    blurRadius: 16,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'Apply',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: -0.1,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -373,14 +397,14 @@ class _ChipBtn extends StatelessWidget {
       child: Container(
         width: 32, height: 32,
         decoration: BoxDecoration(
-          color: VoidColors.outlineVariant,
+          color: context.xFill,
           borderRadius: BorderRadius.circular(8),
         ),
         alignment: Alignment.center,
         child: Text(label,
-            style: const TextStyle(
+            style: GoogleFonts.bricolageGrotesque(
               fontWeight: FontWeight.w700,
-              color: VoidColors.textSecondary,
+              color: context.xTxSec,
             )),
       ),
     );
@@ -437,10 +461,18 @@ class _Empty extends StatelessWidget {
                 color: VoidColors.primary, size: 28),
           ),
           const SizedBox(height: 14),
-          Text('No expenses', style: VoidTextStyles.titleMedium),
+          Text('No expenses',
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: context.xTxPri,
+              )),
           const SizedBox(height: 6),
           Text('Tap + to add your first record',
-              style: VoidTextStyles.bodyMedium),
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 13,
+                color: context.xTxSec,
+              )),
         ],
       ),
     );
