@@ -4,12 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:xledge/screens/activity_screen.dart';
 import 'package:xledge/screens/add_debt_sheet.dart';
 import 'package:xledge/screens/add_expense_sheet.dart';
-import 'package:xledge/screens/calendar_screen.dart';
 import 'package:xledge/screens/dashboard_screen.dart';
 import 'package:xledge/screens/debts_screen.dart';
 import 'package:xledge/screens/expenses_screen.dart';
-import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/theme_ext.dart';
+import 'package:xledge/utils/void_colors.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({super.key});
@@ -70,18 +69,15 @@ class _RootScreenState extends State<RootScreen>
     );
   }
 
-  // Remove this import:
-// import 'package:xledge/screens/calendar_screen.dart';
-
-Widget _screen() {
-  switch (_tab) {
-    case 0:  return DashboardScreen(onSeeAll: () => _setTab(1));
-    case 1:  return const ExpensesScreen();
-    case 3:  return const DebtsScreen();
-    case 4:  return const ActivityScreen();
-    default: return DashboardScreen(onSeeAll: () => _setTab(1));
+  Widget _screen() {
+    switch (_tab) {
+      case 0:  return DashboardScreen(onSeeAll: () => _setTab(1));
+      case 1:  return const ExpensesScreen();
+      case 3:  return const DebtsScreen();
+      case 4:  return const ActivityScreen();
+      default: return DashboardScreen(onSeeAll: () => _setTab(1));
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -89,14 +85,14 @@ Widget _screen() {
       backgroundColor: context.xBg,
       extendBody: true,
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 300),
         switchInCurve:  Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
         transitionBuilder: (child, anim) => FadeTransition(
           opacity: anim,
           child: SlideTransition(
             position: Tween(
-              begin: const Offset(0, 0.015),
+              begin: const Offset(0, 0.012),
               end:   Offset.zero,
             ).animate(CurvedAnimation(
               parent: anim, curve: Curves.easeOutCubic,
@@ -104,7 +100,8 @@ Widget _screen() {
             child: child,
           ),
         ),
-        child: KeyedSubtree(key: ValueKey(_tab), child: _screen()),
+        child: KeyedSubtree(
+            key: ValueKey(_tab), child: _screen()),
       ),
       bottomNavigationBar: _PremiumNav(
         current:  _tab,
@@ -131,9 +128,11 @@ class _PremiumNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navBg = context.xSurface;
+
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
         child: SizedBox(
           height: 72,
           child: AnimatedBuilder(
@@ -147,23 +146,23 @@ class _PremiumNav extends StatelessWidget {
                   Container(
                     height: 64,
                     decoration: BoxDecoration(
-                      color: VoidColors.surface,
+                      color: navBg,
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
-                          color: VoidColors.shadowPurple.withOpacity(0.12),
+                          color: context.isDark
+                              ? Colors.black.withOpacity(0.4)
+                              : VoidColors.shadowPurple
+                                  .withOpacity(0.12),
                           blurRadius: 40,
                           offset: const Offset(0, 8),
                         ),
                         BoxShadow(
-                          color: VoidColors.shadowLg,
+                          color: context.isDark
+                              ? Colors.black.withOpacity(0.2)
+                              : VoidColors.shadowLg,
                           blurRadius: 16,
                           offset: const Offset(0, 4),
-                        ),
-                        const BoxShadow(
-                          color: VoidColors.shadow,
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
                         ),
                       ],
                     ),
@@ -252,7 +251,7 @@ class _NavIcon extends StatelessWidget {
                   icon, size: 22,
                   color: active
                       ? VoidColors.primary
-                      : VoidColors.textHint,
+                      : context.xTxHint,
                 ),
               ),
             ),
@@ -314,11 +313,6 @@ class _PurpleFabState extends State<_PurpleFab>
                 color: VoidColors.primary.withOpacity(0.45),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: VoidColors.primary.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
               ),
             ],
           ),

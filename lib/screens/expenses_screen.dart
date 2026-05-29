@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/providers/void_provider.dart';
 import 'package:xledge/screens/add_expense_sheet.dart';
+import 'package:xledge/services/category_service.dart';
+import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/theme_ext.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_text_styles.dart';
@@ -43,16 +45,41 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
+                  padding: const EdgeInsets.fromLTRB(
+                      24, 64, 24, 20),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Expenses',
                           style: VoidTextStyles.headlineLarge),
-                      _FilterChip(
-                        label:
-                            '${_months[provider.selectedMonth]} ${provider.selectedYear}',
-                        onTap: () => _filterSheet(context, provider),
+                      Row(
+                        children: [
+                          _FilterChip(
+                            label:
+                                '${_months[provider.selectedMonth]} ${provider.selectedYear}',
+                            onTap: () =>
+                                _filterSheet(context, provider),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () =>
+                                _categorySheet(context),
+                            child: Container(
+                              width: 36, height: 36,
+                              decoration: BoxDecoration(
+                                color: context.xFill,
+                                borderRadius:
+                                    BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.category_outlined,
+                                color: context.xTxSec,
+                                size: 17,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -61,8 +88,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               grouped.isEmpty
                   ? SliverFillRemaining(child: _Empty())
                   : SliverPadding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (_, i) {
@@ -125,6 +152,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
+  void _categorySheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => const _CategoryManagerSheet(),
+    );
+  }
+
   Map<String, List<Expense>> _group(List<Expense> expenses) {
     final map = <String, List<Expense>>{};
     for (final e in expenses) {
@@ -132,6 +168,363 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       map.putIfAbsent(key, () => []).add(e);
     }
     return map;
+  }
+}
+
+class _CategoryManagerSheet extends StatelessWidget {
+  const _CategoryManagerSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CategoryService>(
+      builder: (context, catService, _) {
+        final custom = catService.custom;
+
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 40),
+          decoration: BoxDecoration(
+            color: context.xSurface,
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36, height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: context.xBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Categories',
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: context.xTxPri,
+                        letterSpacing: -0.4,
+                      )),
+                  GestureDetector(
+                    onTap: () =>
+                        _showAddDialog(context, catService),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: VoidColors.primaryLight,
+                        borderRadius:
+                            BorderRadius.circular(100),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add_rounded,
+                              color: VoidColors.primary,
+                              size: 15),
+                          const SizedBox(width: 4),
+                          Text('Add',
+                              style:
+                                  GoogleFonts.bricolageGrotesque(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: VoidColors.primary,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (custom.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 20),
+                  child: Center(
+                    child: Text(
+                      'No custom categories yet',
+                      style: GoogleFonts.bricolageGrotesque(
+                        fontSize: 13,
+                        color: context.xTxHint,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight:
+                        MediaQuery.of(context).size.height *
+                            0.4,
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: custom.length,
+                    separatorBuilder: (_, __) => Divider(
+                        color: context.xBorder,
+                        height: 1),
+                    itemBuilder: (_, i) {
+                      final cat = custom[i];
+                      final meta = categoryMeta(cat);
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36, height: 36,
+                              decoration: BoxDecoration(
+                                color: context.xIconBg,
+                                borderRadius:
+                                    BorderRadius.circular(
+                                        10),
+                              ),
+                              child: Icon(meta.icon,
+                                  color: VoidColors.primary,
+                                  size: 16),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(cat,
+                                  style: GoogleFonts
+                                      .bricolageGrotesque(
+                                    fontSize: 14,
+                                    fontWeight:
+                                        FontWeight.w500,
+                                    color: context.xTxPri,
+                                  )),
+                            ),
+                            GestureDetector(
+                              onTap: () => _showEditDialog(
+                                  context, catService, cat),
+                              child: Container(
+                                width: 32, height: 32,
+                                decoration: BoxDecoration(
+                                  color:
+                                      VoidColors.primaryLight,
+                                  borderRadius:
+                                      BorderRadius.circular(
+                                          9),
+                                ),
+                                child: const Icon(
+                                    Icons.edit_outlined,
+                                    color: VoidColors.primary,
+                                    size: 14),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () async {
+                                final confirm =
+                                    await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) =>
+                                      AlertDialog(
+                                    title: Text(
+                                        'Delete "$cat"?',
+                                        style: GoogleFonts
+                                            .bricolageGrotesque(
+                                          fontSize: 16,
+                                          fontWeight:
+                                              FontWeight.w600,
+                                          color: ctx.xTxPri,
+                                        )),
+                                    content: Text(
+                                        'This only removes the category, not existing expenses.',
+                                        style: GoogleFonts
+                                            .bricolageGrotesque(
+                                          fontSize: 13,
+                                          color: ctx.xTxSec,
+                                        )),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(
+                                                ctx, false),
+                                        child: Text('Cancel',
+                                            style: GoogleFonts
+                                                .bricolageGrotesque(
+                                                    color: ctx
+                                                        .xTxSec)),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(
+                                                ctx, true),
+                                        child: Text('Delete',
+                                            style: GoogleFonts
+                                                .bricolageGrotesque(
+                                              color: VoidColors
+                                                  .danger,
+                                              fontWeight:
+                                                  FontWeight
+                                                      .w600,
+                                            )),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true) {
+                                  catService
+                                      .deleteCategory(cat);
+                                }
+                              },
+                              child: Container(
+                                width: 32, height: 32,
+                                decoration: BoxDecoration(
+                                  color:
+                                      VoidColors.dangerLight,
+                                  borderRadius:
+                                      BorderRadius.circular(
+                                          9),
+                                ),
+                                child: const Icon(
+                                    Icons
+                                        .delete_outline_rounded,
+                                    color: VoidColors.danger,
+                                    size: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddDialog(
+      BuildContext context, CategoryService service) {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('New Category',
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: ctx.xTxPri,
+            )),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          style: GoogleFonts.bricolageGrotesque(
+              color: ctx.xTxPri),
+          decoration: InputDecoration(
+            hintText: 'e.g. Subscriptions',
+            hintStyle: GoogleFonts.bricolageGrotesque(
+                color: ctx.xTxHint),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: GoogleFonts.bricolageGrotesque(
+                    color: ctx.xTxSec)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final ok =
+                  await service.addCategory(ctrl.text);
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Already exists',
+                        style: GoogleFonts.bricolageGrotesque(
+                            color: Colors.white)),
+                    backgroundColor: VoidColors.primary,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(14)),
+                    margin: const EdgeInsets.all(16),
+                  ),
+                );
+              }
+            },
+            child: Text('Create',
+                style: GoogleFonts.bricolageGrotesque(
+                  color: VoidColors.primary,
+                  fontWeight: FontWeight.w600,
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context,
+      CategoryService service, String current) {
+    final ctrl = TextEditingController(text: current);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Edit Category',
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: ctx.xTxPri,
+            )),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          style: GoogleFonts.bricolageGrotesque(
+              color: ctx.xTxPri),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: GoogleFonts.bricolageGrotesque(
+                    color: ctx.xTxSec)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final ok = await service.editCategory(
+                  current, ctrl.text);
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Name already exists',
+                        style: GoogleFonts.bricolageGrotesque(
+                            color: Colors.white)),
+                    backgroundColor: VoidColors.primary,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(14)),
+                    margin: const EdgeInsets.all(16),
+                  ),
+                );
+              }
+            },
+            child: Text('Save',
+                style: GoogleFonts.bricolageGrotesque(
+                  color: VoidColors.primary,
+                  fontWeight: FontWeight.w600,
+                )),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -235,7 +628,8 @@ class _FilterSheet extends StatefulWidget {
 class _FilterSheetState extends State<_FilterSheet> {
   static const _monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'July', 'August', 'September', 'October',
+    'November', 'December'
   ];
 
   late int _month;
@@ -291,7 +685,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                 children: [
                   _ChipBtn(
                     label: '<',
-                    onTap: () => setState(() => _year--),
+                    onTap: () =>
+                        setState(() => _year--),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -305,7 +700,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                   ),
                   _ChipBtn(
                     label: '>',
-                    onTap: () => setState(() => _year++),
+                    onTap: () =>
+                        setState(() => _year++),
                   ),
                 ],
               ),
@@ -351,32 +747,35 @@ class _FilterSheetState extends State<_FilterSheet> {
             },
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 17),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 17),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFA78BFA), Color(0xFF6C3CE1)],
+                  colors: [
+                    Color(0xFFA78BFA),
+                    Color(0xFF6C3CE1)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(100),
                 boxShadow: [
                   BoxShadow(
-                    color: VoidColors.primary.withOpacity(0.26),
+                    color:
+                        VoidColors.primary.withOpacity(0.26),
                     blurRadius: 16,
                     offset: const Offset(0, 5),
                   ),
                 ],
               ),
               alignment: Alignment.center,
-              child: Text(
-                'Apply',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: -0.1,
-                ),
-              ),
+              child: Text('Apply',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: -0.1,
+                  )),
             ),
           ),
         ],

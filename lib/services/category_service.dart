@@ -20,19 +20,59 @@ class CategoryService extends ChangeNotifier {
 
   Future<bool> addCategory(String name) async {
     final trimmed = name.trim();
+
     if (trimmed.isEmpty) return false;
+
     final lower = trimmed.toLowerCase();
-    final exists = all.any((c) => c.toLowerCase() == lower);
+
+    final exists =
+        all.any((c) => c.toLowerCase() == lower);
+
     if (exists) return false;
+
     _custom.add(trimmed);
+
     await UserPrefsService.saveCustomCategories(_custom);
+
     notifyListeners();
+
     return true;
   }
 
-  Future<void> removeCustom(String name) async {
-    _custom.remove(name);
+  Future<bool> editCategory(
+      String oldName,
+      String newName,
+  ) async {
+    final trimmed = newName.trim();
+
+    if (trimmed.isEmpty) return false;
+
+    final exists = all.any(
+      (c) =>
+          c.toLowerCase() == trimmed.toLowerCase() &&
+          c.toLowerCase() != oldName.toLowerCase(),
+    );
+
+    if (exists) return false;
+
+    final index = _custom.indexOf(oldName);
+
+    if (index == -1) return false;
+
+    _custom[index] = trimmed;
+
     await UserPrefsService.saveCustomCategories(_custom);
+
+    notifyListeners();
+
+    return true;
+  }
+
+  Future<void> deleteCategory(String name) async {
+    _custom.remove(name);
+
+    await UserPrefsService.saveCustomCategories(_custom);
+
     notifyListeners();
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/utils/category_utils.dart';
+import 'package:xledge/utils/theme_ext.dart';
 import 'package:xledge/utils/void_colors.dart';
 
 class TransactionTile extends StatelessWidget {
@@ -28,11 +29,13 @@ class TransactionTile extends StatelessWidget {
         color:     VoidColors.primary,
         icon:      Icons.edit_rounded,
         alignment: Alignment.centerLeft,
+        context:   context,
       ),
       secondaryBackground: _swipeBg(
-        color:     VoidColors.textSecondary,
+        color:     VoidColors.danger,
         icon:      Icons.delete_outlined,
         alignment: Alignment.centerRight,
+        context:   context,
       ),
       confirmDismiss: (dir) async {
         HapticFeedback.lightImpact();
@@ -50,19 +53,18 @@ class TransactionTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 44, height: 44,
               decoration: BoxDecoration(
                 color: isAllow
                     ? VoidColors.primaryLight
-                    : VoidColors.iconBg,
+                    : context.xIconBg,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 isAllow ? Icons.savings_outlined : meta.icon,
                 color: isAllow
                     ? VoidColors.primary
-                    : VoidColors.iconColor,
+                    : context.xIconColor,
                 size: 19,
               ),
             ),
@@ -76,7 +78,7 @@ class TransactionTile extends StatelessWidget {
                     style: GoogleFonts.bricolageGrotesque(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: VoidColors.textPrimary,
+                      color: context.xTxPri,
                       letterSpacing: -0.1,
                     ),
                     maxLines: 1,
@@ -87,7 +89,7 @@ class TransactionTile extends StatelessWidget {
                     _smartDate(expense.date),
                     style: GoogleFonts.bricolageGrotesque(
                       fontSize: 11,
-                      color: VoidColors.textHint,
+                      color: context.xTxHint,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -102,7 +104,7 @@ class TransactionTile extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: isAllow
                     ? VoidColors.primary
-                    : VoidColors.textPrimary,
+                    : context.xTxPri,
                 letterSpacing: -0.3,
               ),
             ),
@@ -116,11 +118,12 @@ class TransactionTile extends StatelessWidget {
     required Color color,
     required IconData icon,
     required Alignment alignment,
+    required BuildContext context,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withOpacity(0.10),
         borderRadius: BorderRadius.circular(14),
       ),
       alignment: alignment,
@@ -133,40 +136,31 @@ class TransactionTile extends StatelessWidget {
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: Text(
-              'Delete record?',
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: VoidColors.textPrimary,
-              ),
-            ),
-            content: Text(
-              'This cannot be undone.',
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 13,
-                color: VoidColors.textSecondary,
-              ),
-            ),
+            title: Text('Delete record?',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: ctx.xTxPri,
+                )),
+            content: Text('This cannot be undone.',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 13,
+                  color: ctx.xTxSec,
+                )),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.bricolageGrotesque(
-                    color: VoidColors.textSecondary,
-                  ),
-                ),
+                child: Text('Cancel',
+                    style: GoogleFonts.bricolageGrotesque(
+                        color: ctx.xTxSec)),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(
-                  'Delete',
-                  style: GoogleFonts.bricolageGrotesque(
-                    color: VoidColors.danger,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text('Delete',
+                    style: GoogleFonts.bricolageGrotesque(
+                      color: VoidColors.danger,
+                      fontWeight: FontWeight.w600,
+                    )),
               ),
             ],
           ),
