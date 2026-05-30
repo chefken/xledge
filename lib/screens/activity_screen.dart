@@ -8,6 +8,8 @@ import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_text_styles.dart';
 import 'package:xledge/widgets/void_card.dart';
 import 'package:xledge/screens/settings_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:xledge/utils/theme_ext.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -550,53 +552,47 @@ class _InsightTile extends StatelessWidget {
   const _InsightTile({required this.text});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: VoidColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: VoidColors.shadow,
-            blurRadius: 12,
-            offset: Offset(0, 2),
+Widget build(BuildContext context) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: context.xCard,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: context.xShadow,
+          blurRadius: 12,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 32, height: 32,
+          decoration: BoxDecoration(
+            color: VoidColors.primaryLight,
+            borderRadius: BorderRadius.circular(10),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: VoidColors.primaryLight,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.lightbulb_outline_rounded,
-              color: VoidColors.primary,
-              size: 15,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
+          child: const Icon(Icons.lightbulb_outline_rounded,
+              color: VoidColors.primary, size: 15),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(text,
+              style: GoogleFonts.bricolageGrotesque(
                 fontSize: 13,
-                color: VoidColors.textPrimary,
+                color: context.xTxPri,
                 fontWeight: FontWeight.w400,
                 height: 1.45,
                 letterSpacing: -0.1,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+              )),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class _MonoDonut extends StatelessWidget {
@@ -711,85 +707,90 @@ class _CatInterpretRow extends StatelessWidget {
   const _CatInterpretRow({required this.cat, required this.isTop});
 
   @override
-  Widget build(BuildContext context) {
-    final meta = categoryMeta(cat.category);
+Widget build(BuildContext context) {
+  final meta = categoryMeta(cat.category);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isTop ? VoidColors.primaryLight : VoidColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: isTop
-            ? null
-            : const [
-                BoxShadow(
-                  color: VoidColors.shadow,
-                  blurRadius: 10,
-                  offset: Offset(0, 2),
-                ),
-              ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: isTop
-                  ? VoidColors.primary.withOpacity(0.12)
-                  : VoidColors.iconBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              meta.icon,
-              size: 17,
-              color: isTop ? VoidColors.primary : VoidColors.iconColor,
-            ),
+  return Container(
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: isTop
+          ? VoidColors.primaryLight
+          : context.xCard,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: isTop
+          ? null
+          : [
+              BoxShadow(
+                color: context.xShadow,
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 38, height: 38,
+          decoration: BoxDecoration(
+            color: isTop
+                ? VoidColors.primary.withOpacity(0.12)
+                : context.xIconBg,
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  cat.category,
-                  style: TextStyle(
+          child: Icon(
+            meta.icon,
+            size: 17,
+            color: isTop
+                ? VoidColors.primary
+                : context.xIconColor,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(cat.category,
+                  style: GoogleFonts.bricolageGrotesque(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: isTop ? VoidColors.primary : VoidColors.textPrimary,
-                    letterSpacing: -0.1,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  isTop
-                      ? 'Highest spend · ${cat.percentage.toStringAsFixed(0)}% of total'
-                      : '${cat.percentage.toStringAsFixed(0)}% of total spending',
-                  style: TextStyle(
-                    fontSize: 11,
                     color: isTop
-                        ? VoidColors.primary.withOpacity(0.7)
-                        : VoidColors.textHint,
-                    fontWeight: FontWeight.w400,
-                  ),
+                        ? VoidColors.primary
+                        : context.xTxPri,
+                    letterSpacing: -0.1,
+                  )),
+              const SizedBox(height: 3),
+              Text(
+                isTop
+                    ? 'Highest spend · ${cat.percentage.toStringAsFixed(0)}% of total'
+                    : '${cat.percentage.toStringAsFixed(0)}% of total spending',
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 11,
+                  color: isTop
+                      ? VoidColors.primary.withOpacity(0.7)
+                      : context.xTxHint,
+                  fontWeight: FontWeight.w400,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Text(
-            '₹${cat.total.toStringAsFixed(0)}',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: isTop ? VoidColors.primary : VoidColors.textPrimary,
-              letterSpacing: -0.3,
-            ),
+        ),
+        Text(
+          '₹${cat.total.toStringAsFixed(0)}',
+          style: GoogleFonts.bricolageGrotesque(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: isTop
+                ? VoidColors.primary
+                : context.xTxPri,
+            letterSpacing: -0.3,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class _ReflectionCard extends StatelessWidget {
@@ -798,67 +799,52 @@ class _ReflectionCard extends StatelessWidget {
   const _ReflectionCard({required this.provider, required this.analysis});
 
   @override
-  Widget build(BuildContext context) {
-    const months = [
-      '',
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    final month = months[provider.selectedMonth];
-    final leak = analysis.primaryLeak ?? 'various categories';
-    final net = provider.netBalance;
-    final netStr = net >= 0
-        ? 'You stayed in the green by ₹${net.toStringAsFixed(0)}.'
-        : 'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.';
+Widget build(BuildContext context) {
+  const months = [
+    '', 'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  final month = months[provider.selectedMonth];
+  final leak  = analysis.primaryLeak ?? 'various categories';
+  final net   = provider.netBalance;
+  final netStr = net >= 0
+      ? 'You stayed in the green by ₹${net.toStringAsFixed(0)}.'
+      : 'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.';
 
-    final reflection =
-        'In $month, most of your spending went towards $leak. '
-        '$netStr Consider reviewing your $leak expenses going into next month.';
+  final reflection =
+      'In $month, most of your spending went towards $leak. '
+      '$netStr Consider reviewing your $leak expenses going into next month.';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: VoidColors.outlineVariant,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Monthly Reflection',
-            style: TextStyle(
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: context.xCard,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Monthly Reflection',
+            style: GoogleFonts.bricolageGrotesque(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: VoidColors.textHint,
+              color: context.xTxHint,
               letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            reflection,
-            style: const TextStyle(
+            )),
+        const SizedBox(height: 10),
+        Text(reflection,
+            style: GoogleFonts.bricolageGrotesque(
               fontSize: 14,
-              color: VoidColors.textPrimary,
+              color: context.xTxPri,
               fontWeight: FontWeight.w400,
               height: 1.55,
               letterSpacing: -0.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+            )),
+      ],
+    ),
+  );
+}
 }
 
 class _EmptyActivity extends StatelessWidget {

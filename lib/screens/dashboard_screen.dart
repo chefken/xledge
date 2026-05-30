@@ -9,6 +9,7 @@ import 'package:xledge/widgets/transaction_tile.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:xledge/models/expense_model.dart';
 import 'package:xledge/services/user_prefs_service.dart';
+import 'package:xledge/utils/theme_ext.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onSeeAll;
@@ -201,41 +202,35 @@ class _CalendarButtonState extends State<_CalendarButton>
   void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown:   (_) => _ctrl.reverse(),
-      onTapUp:     (_) { _ctrl.forward(); widget.onTap(); },
-      onTapCancel: ()  => _ctrl.forward(),
-      child: ScaleTransition(
-        scale: _scale,
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: VoidColors.surface,
-            shape: BoxShape.circle,
-            boxShadow: const [
-              BoxShadow(
-                color: VoidColors.shadowMd,
-                blurRadius: 16,
-                offset: Offset(0, 4),
-              ),
-              BoxShadow(
-                color: VoidColors.shadow,
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.calendar_month_outlined,
-            color: VoidColors.textSecondary,
-            size: 20,
-          ),
+Widget build(BuildContext context) {
+  return GestureDetector(
+    onTapDown:   (_) => _ctrl.reverse(),
+    onTapUp:     (_) { _ctrl.forward(); widget.onTap(); },
+    onTapCancel: ()  => _ctrl.forward(),
+    child: ScaleTransition(
+      scale: _scale,
+      child: Container(
+        width: 46, height: 46,
+        decoration: BoxDecoration(
+          color: context.xCard,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: context.xShadow,
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.calendar_month_outlined,
+          color: context.xTxSec,
+          size: 20,
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _HeroCarousel extends StatelessWidget {

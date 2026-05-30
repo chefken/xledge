@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:xledge/utils/void_colors.dart';
+import 'package:xledge/utils/theme_ext.dart';
 
 class VoidCard extends StatelessWidget {
   final Widget child;
@@ -19,23 +19,16 @@ class VoidCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: padding ?? const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color ??
-              (isDark
-                  ? VoidColors.darkCard
-                  : VoidColors.surface),
+          color: color ?? context.xCard,
           borderRadius: BorderRadius.circular(radius),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(
-                  alpha: isDark ? 0.25 : 0.08),
+              color: context.xShadow,
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),

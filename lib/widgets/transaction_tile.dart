@@ -55,13 +55,13 @@ class TransactionTile extends StatelessWidget {
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: isAllow
-                    ? VoidColors.primaryLight
-                    : context.xIconBg,
+                color: context.xIconBg,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
-                isAllow ? Icons.savings_outlined : meta.icon,
+                isAllow
+                    ? Icons.savings_outlined
+                    : meta.icon,
                 color: isAllow
                     ? VoidColors.primary
                     : context.xIconColor,

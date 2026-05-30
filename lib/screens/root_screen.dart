@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:xledge/screens/activity_screen.dart';
 import 'package:xledge/screens/add_debt_sheet.dart';
 import 'package:xledge/screens/add_expense_sheet.dart';
@@ -95,7 +94,8 @@ class _RootScreenState extends State<RootScreen>
               begin: const Offset(0, 0.012),
               end:   Offset.zero,
             ).animate(CurvedAnimation(
-              parent: anim, curve: Curves.easeOutCubic,
+              parent: anim,
+              curve: Curves.easeOutCubic,
             )),
             child: child,
           ),
@@ -104,10 +104,10 @@ class _RootScreenState extends State<RootScreen>
             key: ValueKey(_tab), child: _screen()),
       ),
       bottomNavigationBar: _PremiumNav(
-        current:  _tab,
-        fabAnim:  _fabAnim,
-        onTap:    _setTab,
-        onFab:    _onFabTap,
+        current: _tab,
+        fabAnim: _fabAnim,
+        onTap:   _setTab,
+        onFab:   _onFabTap,
       ),
     );
   }
@@ -128,8 +128,6 @@ class _PremiumNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final navBg = context.xSurface;
-
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -146,12 +144,12 @@ class _PremiumNav extends StatelessWidget {
                   Container(
                     height: 64,
                     decoration: BoxDecoration(
-                      color: navBg,
+                      color: context.xSurface,
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
                           color: context.isDark
-                              ? Colors.black.withOpacity(0.4)
+                              ? Colors.black.withOpacity(0.5)
                               : VoidColors.shadowPurple
                                   .withOpacity(0.12),
                           blurRadius: 40,
@@ -159,7 +157,7 @@ class _PremiumNav extends StatelessWidget {
                         ),
                         BoxShadow(
                           color: context.isDark
-                              ? Colors.black.withOpacity(0.2)
+                              ? Colors.black.withOpacity(0.3)
                               : VoidColors.shadowLg,
                           blurRadius: 16,
                           offset: const Offset(0, 4),
@@ -239,7 +237,7 @@ class _NavIcon extends StatelessWidget {
               width: 44, height: 44,
               decoration: BoxDecoration(
                 color: active
-                    ? VoidColors.primaryLight
+                    ? context.xNavActive
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -289,7 +287,10 @@ class _PurpleFabState extends State<_PurpleFab>
   }
 
   @override
-  void dispose() { _press.dispose(); super.dispose(); }
+  void dispose() {
+    _press.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
