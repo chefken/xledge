@@ -105,14 +105,14 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 22),
                 _SheetField(
                   controller: _nameCtrl,
-                  hint: 'Who is this?',
+                  hint: '',
                   label: 'Contact',
                   capitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _amountCtrl,
-                  hint: '0',
+                  hint: '',
                   label: 'Amount',
                   prefix: '₹  ',
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -121,7 +121,7 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _descCtrl,
-                  hint: 'What was it for?',
+                  hint: '',
                   label: 'Reason',
                   capitalization: TextCapitalization.sentences,
                 ),
@@ -194,14 +194,22 @@ class _TypeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    const duration = Duration(milliseconds: 200);
+    final curve = Curves.easeInOutCubic;
 
+    // Fix: Match the exact depth of the OWES YOU background card
     final cardBg = active
-        ? (isDark ? VoidColors.primary.withOpacity(0.15) : VoidColors.primaryLight)
+        ? (isDark ? VoidColors.primary.withOpacity(0.12) : VoidColors.primaryLight)
         : (isDark ? VoidColors.darkCard : VoidColors.outlineVariant);
 
     final iconBg = active
         ? VoidColors.primary.withOpacity(0.15)
         : (isDark ? VoidColors.darkBorder : VoidColors.outline);
+
+    // Fix: Use the bright lavender shade so the text pops exactly like the "₹0"
+    final textColor = active
+        ? (isDark ? const Color(0xFFA78BFA) : VoidColors.primary)
+        : (isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary);
 
     return GestureDetector(
       onTap: () {
@@ -209,26 +217,34 @@ class _TypeCard extends StatelessWidget {
         onTap();
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
+        duration: duration,
+        curve: curve,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(18),
-          // Stripped out the outer active border stroke completely for a clean flat design
         ),
         child: Row(
           children: [
-            Container(
+            AnimatedContainer(
+              duration: duration,
+              curve: curve,
               width: 32, height: 32,
               decoration: BoxDecoration(
                 color: iconBg,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 15,
-                color: active ? VoidColors.primary : VoidColors.textHint,
+              // Wrap with an explicit animated theme to smoothly blend icon pigments
+              child: AnimatedTheme(
+                data: ThemeData(
+                  iconTheme: IconThemeData(
+                    color: active ? VoidColors.primary : VoidColors.textHint,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  size: 15,
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -236,14 +252,18 @@ class _TypeCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: active
-                            ? VoidColors.primary
-                            : (isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary),
-                      )),
+                  // Fix: Interpolates typography colors inside the animation timeline
+                  AnimatedDefaultTextStyle(
+                    duration: duration,
+                    curve: curve,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                    child: Text(label),
+                  ),
+                  const SizedBox(height: 2),
                   Text(sublabel,
                       style: TextStyle(
                         fontSize: 10,
