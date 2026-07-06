@@ -27,11 +27,7 @@ class VoidCard extends StatelessWidget {
           color: color ?? context.xCard,
           borderRadius: BorderRadius.circular(radius),
           boxShadow: [
-            BoxShadow(
-              color: context.xShadow,
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
+            BoxShadow(color: context.xShadow, blurRadius: 20, offset: const Offset(0, 4)),
           ],
         ),
         child: child,
