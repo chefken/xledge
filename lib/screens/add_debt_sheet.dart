@@ -106,14 +106,14 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 22),
                 _SheetField(
                   controller: _nameCtrl,
-                  hint: 'Who is this?',
+                  hint: '',
                   label: 'Contact',
                   capitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _amountCtrl,
-                  hint: '0',
+                  hint: '',
                   label: 'Amount',
                   prefix: '₹  ',
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -122,7 +122,7 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _descCtrl,
-                  hint: 'What was it for?',
+                  hint: '',
                   label: 'Reason',
                   capitalization: TextCapitalization.sentences,
                 ),
