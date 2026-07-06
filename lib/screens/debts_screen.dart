@@ -33,7 +33,7 @@ class DebtsScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(
                       24, 64, 24, 20),
                   child: Text('Debts',
-                      style: VoidTextStyles.headlineLarge),
+                      style: Theme.of(context).textTheme.headlineLarge),
                 ),
               ),
               SliverToBoxAdapter(
@@ -168,26 +168,27 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Build adaptive styling configurations for the primary ("Owes You") card
+    final cardBg = isPrimary
+        ? (isDark ? VoidColors.primary.withOpacity(0.12) : VoidColors.primaryLight)
+        : context.xCard;
+
+    final labelColor = isPrimary
+        ? (isDark ? const Color(0xFFA78BFA) : VoidColors.primary)
+        : context.xTxHint;
+
+    final amountColor = isPrimary
+        ? (isDark ? const Color(0xFFA78BFA) : VoidColors.primary)
+        : context.xTxPri;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isPrimary
-            ? VoidColors.primaryLight
-            : context.xCard,
+        color: cardBg,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isPrimary
-              ? VoidColors.primary.withOpacity(0.15)
-              : context.xBorder,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: context.xShadow,
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // Killed the heavy layout shadows to match our clean, flat system aesthetic
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,9 +197,7 @@ class _SummaryCard extends StatelessWidget {
               style: GoogleFonts.bricolageGrotesque(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: isPrimary
-                    ? VoidColors.primary
-                    : context.xTxHint,
+                color: labelColor,
                 letterSpacing: 1.2,
               )),
           const SizedBox(height: 10),
@@ -207,9 +206,7 @@ class _SummaryCard extends StatelessWidget {
             style: GoogleFonts.bricolageGrotesque(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: isPrimary
-                  ? VoidColors.primary
-                  : context.xTxPri,
+              color: amountColor,
               letterSpacing: -0.8,
             ),
           ),
@@ -238,6 +235,8 @@ class _DebtTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     const m = [
       '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -250,22 +249,17 @@ class _DebtTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.xCard,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: context.xShadow,
-              blurRadius: 16,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          // Killed the heavy box shadows to match your clean, flat V2 style guide
         ),
         child: Row(
           children: [
+            // --- THE FIXED AVATAR DECK ---
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
                 color: isIOwe
-                    ? context.xFill
-                    : VoidColors.primaryLight,
+                    ? (isDark ? VoidColors.primary.withOpacity(0.08) : context.xFill)
+                    : (isDark ? VoidColors.primary.withOpacity(0.15) : VoidColors.primaryLight),
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -275,7 +269,7 @@ class _DebtTile extends StatelessWidget {
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
                   color: isIOwe
-                      ? context.xTxPri
+                      ? (isDark ? const Color(0xFFA78BFA) : context.xTxPri)
                       : VoidColors.primary,
                 ),
               ),
@@ -314,26 +308,28 @@ class _DebtTile extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: isIOwe
                         ? context.xTxPri
-                        : VoidColors.primary,
+                        : (isDark ? const Color(0xFFA78BFA) : VoidColors.primary),
                     letterSpacing: -0.3,
                   ),
                 ),
                 const SizedBox(height: 6),
+                // --- THE CLEANED ADAPTIVE SETTLE BUTTON ---
                 GestureDetector(
                   onTap: () => provider.settleDebt(debt.id),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: VoidColors.primaryLight,
-                      borderRadius:
-                          BorderRadius.circular(100),
+                      color: isDark 
+                          ? VoidColors.primary.withOpacity(0.15) 
+                          : VoidColors.primaryLight,
+                      borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text('Settle',
                         style: GoogleFonts.bricolageGrotesque(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: VoidColors.primary,
+                          color: isDark ? const Color(0xFFA78BFA) : VoidColors.primary,
                         )),
                   ),
                 ),
@@ -345,7 +341,6 @@ class _DebtTile extends StatelessWidget {
     );
   }
 }
-
 class _MiniPurpleFab extends StatelessWidget {
   final VoidCallback onTap;
   const _MiniPurpleFab({required this.onTap});

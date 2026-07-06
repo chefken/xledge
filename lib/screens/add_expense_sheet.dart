@@ -5,7 +5,7 @@ import 'package:xledge/providers/void_provider.dart';
 import 'package:xledge/utils/category_utils.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/void_constants.dart';
-import 'package:xledge/utils/void_text_styles.dart';
+import 'package:xledge/utils/theme_ext.dart';
 import 'package:xledge/services/category_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -68,8 +68,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
       lastDate: DateTime.now(),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: VoidColors.primary,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: VoidColors.primary,
+            brightness: Theme.of(context).brightness,
           ),
         ),
         child: child!,
@@ -98,6 +99,9 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(
@@ -106,10 +110,10 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
           padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
-            decoration: const BoxDecoration(
-              color: VoidColors.surface,
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(28)),
+            decoration: BoxDecoration(
+              // Fix: Dynamic background matching your theme surface definition
+              color: isDark ? VoidColors.darkSurface : VoidColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 14, 24, 40),
@@ -122,7 +126,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
                       width: 36, height: 4,
                       margin: const EdgeInsets.only(bottom: 22),
                       decoration: BoxDecoration(
-                        color: VoidColors.outline,
+                        color: isDark ? VoidColors.darkBorder : VoidColors.outline,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -136,7 +140,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
                             : (_isAllowance
                                 ? 'Add Allowance'
                                 : 'Add Expense'),
-                        style: VoidTextStyles.headlineMedium,
+                        style: theme.textTheme.headlineMedium,
                       ),
                       _TypeToggle(
                         isAllowance: _isAllowance,
@@ -146,70 +150,72 @@ class _AddExpenseSheetState extends State<AddExpenseSheet>
                     ],
                   ),
                   const SizedBox(height: 28),
-                  _Label('Item Name'),
+                  const _Label('Item Name'),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _titleCtrl,
-                    textCapitalization:
-                        TextCapitalization.sentences,
-                    style: VoidTextStyles.bodyLarge,
-                    decoration: const InputDecoration(
-                        hintText: ''),
+                    textCapitalization: TextCapitalization.sentences,
+                    style: theme.textTheme.bodyLarge,
+                    decoration: InputDecoration(
+                      hintText: '',
+                      hintStyle: TextStyle(color: isDark ? VoidColors.darkTextHint : VoidColors.textHint),
+                    ),
                   ),
                   const SizedBox(height: 18),
-                  _Label('Amount'),
+                  const _Label('Amount'),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _amountCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
-                    style: const TextStyle(
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: VoidColors.textPrimary,
+                      color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
                       letterSpacing: -0.8,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       prefixText: '₹  ',
                       prefixStyle: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
-                        color: VoidColors.textHint,
+                        color: isDark ? VoidColors.darkTextHint : VoidColors.textHint,
                       ),
                       hintText: '',
+                      hintStyle: TextStyle(color: isDark ? VoidColors.darkTextHint : VoidColors.textHint),
                     ),
                   ),
                   if (!_isAllowance) ...[
                     const SizedBox(height: 22),
-                    _Label('Category'),
+                    const _Label('Category'),
                     const SizedBox(height: 12),
                     _CategoryGrid(
                       selected: _category,
                       onSelect: (c) => setState(() => _category = c),
                     ),
                   ],
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   GestureDetector(
                     onTap: _pickDate,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 15),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
                       decoration: BoxDecoration(
-                        color: VoidColors.outlineVariant,
+                        color: isDark ? VoidColors.darkCard : VoidColors.outlineVariant,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.calendar_today_outlined,
-                            color: VoidColors.textSecondary,
+                            color: isDark ? VoidColors.darkTextSecondary : VoidColors.textSecondary,
                             size: 16,
                           ),
                           const SizedBox(width: 10),
-                          Text(_fmtDate(_date),
-                              style: VoidTextStyles.bodyMedium
-                                  .copyWith(
-                                      color: VoidColors.textPrimary)),
+                          Text(
+                            _fmtDate(_date),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -250,10 +256,11 @@ class _TypeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: VoidColors.outlineVariant,
+        color: isDark ? VoidColors.darkCard : VoidColors.outlineVariant,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -288,13 +295,13 @@ class _Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active ? VoidColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
@@ -304,7 +311,9 @@ class _Pill extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: active ? Colors.white : VoidColors.textSecondary,
+            color: active 
+                ? Colors.white 
+                : (isDark ? VoidColors.darkTextSecondary : VoidColors.textSecondary),
           ),
         ),
       ),
@@ -312,9 +321,6 @@ class _Pill extends StatelessWidget {
   }
 }
 
-
-
-// Replace _CategoryGrid with this:
 class _CategoryGrid extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onSelect;
@@ -338,8 +344,7 @@ class _CategoryGrid extends StatelessWidget {
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 4,
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
@@ -354,14 +359,12 @@ class _CategoryGrid extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: fill,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: VoidColors.primary.withOpacity(0.3),
-                        width: 1.5),
+                    // Removed the old glowing border stroke completely
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_rounded,
+                      const Icon(Icons.add_rounded,
                           size: 20,
                           color: VoidColors.primary),
                       const SizedBox(height: 6),
@@ -389,15 +392,10 @@ class _CategoryGrid extends StatelessWidget {
                 curve: Curves.easeOutCubic,
                 decoration: BoxDecoration(
                   color: active
-                      ? VoidColors.primaryLight
+                      ? (isDark ? VoidColors.primary.withOpacity(0.15) : VoidColors.primaryLight)
                       : fill,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: active
-                        ? VoidColors.primary.withOpacity(0.4)
-                        : border,
-                    width: 1.5,
-                  ),
+                  // Border stripped out entirely for a completely flat modern design
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -433,8 +431,7 @@ class _CategoryGrid extends StatelessWidget {
     );
   }
 
-  void _showAddCategory(
-      BuildContext context, CategoryService service) {
+  void _showAddCategory(BuildContext context, CategoryService service) {
     final ctrl = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -449,8 +446,7 @@ class _CategoryGrid extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 14, 24, 36),
           decoration: BoxDecoration(
             color: isDark ? VoidColors.darkSurface : VoidColors.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -461,9 +457,7 @@ class _CategoryGrid extends StatelessWidget {
                   width: 36, height: 4,
                   margin: const EdgeInsets.only(bottom: 20),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? VoidColors.darkBorder
-                        : VoidColors.outline,
+                    color: isDark ? VoidColors.darkBorder : VoidColors.outline,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -472,9 +466,7 @@ class _CategoryGrid extends StatelessWidget {
                   style: GoogleFonts.bricolageGrotesque(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? VoidColors.darkTextPrimary
-                        : VoidColors.textPrimary,
+                    color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
                     letterSpacing: -0.4,
                   )),
               const SizedBox(height: 18),
@@ -484,17 +476,13 @@ class _CategoryGrid extends StatelessWidget {
                 textCapitalization: TextCapitalization.words,
                 style: GoogleFonts.bricolageGrotesque(
                   fontSize: 15,
-                  color: isDark
-                      ? VoidColors.darkTextPrimary
-                      : VoidColors.textPrimary,
+                  color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   hintText: 'e.g. Subscriptions, Pets...',
                   hintStyle: GoogleFonts.bricolageGrotesque(
                     fontSize: 15,
-                    color: isDark
-                        ? VoidColors.darkTextHint
-                        : VoidColors.textHint,
+                    color: isDark ? VoidColors.darkTextHint : VoidColors.textHint,
                   ),
                 ),
               ),
@@ -509,13 +497,10 @@ class _CategoryGrid extends StatelessWidget {
                         SnackBar(
                           content: Text(
                               'Category already exists',
-                              style: GoogleFonts.bricolageGrotesque(
-                                  color: Colors.white)),
+                              style: GoogleFonts.bricolageGrotesque(color: Colors.white)),
                           backgroundColor: VoidColors.primary,
                           behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           margin: const EdgeInsets.all(16),
                         ),
                       );
@@ -529,10 +514,7 @@ class _CategoryGrid extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFA78BFA),
-                        Color(0xFF5B3FD4),
-                      ],
+                      colors: [Color(0xFFA78BFA), Color(0xFF5B3FD4)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -602,7 +584,7 @@ class _SubmitButtonState extends State<_SubmitButton>
     super.dispose();
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTapDown:   (_) => _ctrl.reverse(),
@@ -614,27 +596,10 @@ class _SubmitButtonState extends State<_SubmitButton>
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 17),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: widget.isAllowance
-                  ? [
-                      const Color(0xFFB49BFB),
-                      const Color(0xFF7C5CFC),
-                    ]
-                  : [
-                      VoidColors.gradStart,
-                      VoidColors.gradEnd,
-                    ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            // Uses the exact solid color as your top toggle pills
+            color: VoidColors.primary,
             borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: VoidColors.primary.withOpacity(0.28),
-                blurRadius: 16,
-                offset: const Offset(0, 5),
-              ),
-            ],
+            // Stripped out BoxShadow entirely to kill the bottom glow effect
           ),
           alignment: Alignment.center,
           child: Text(
@@ -650,20 +615,20 @@ class _SubmitButtonState extends State<_SubmitButton>
       ),
     );
   }
-}
-
+    }
 class _Label extends StatelessWidget {
   final String text;
   const _Label(this.text);
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w500,
-        color: VoidColors.textHint,
+        color: isDark ? VoidColors.darkTextHint : VoidColors.textHint,
         letterSpacing: 0.4,
       ),
     );

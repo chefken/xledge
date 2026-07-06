@@ -52,7 +52,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Expenses',
-                          style: VoidTextStyles.headlineLarge),
+                          style: Theme.of(context).textTheme.headlineLarge),
                       Row(
                         children: [
                           _FilterChip(
@@ -589,13 +589,17 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: VoidColors.primaryLight,
+          // Stripped out the white/purple border entirely for a flat look
+          color: isDark 
+              ? VoidColors.primary.withOpacity(0.12) 
+              : VoidColors.primaryLight,
           borderRadius: BorderRadius.circular(100),
         ),
         child: Row(
@@ -605,11 +609,12 @@ class _FilterChip extends StatelessWidget {
                 style: GoogleFonts.bricolageGrotesque(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: VoidColors.primary,
+                  color: isDark ? const Color(0xFFA78BFA) : VoidColors.primary,
                 )),
             const SizedBox(width: 4),
-            const Icon(Icons.expand_more_rounded,
-                color: VoidColors.primary, size: 16),
+            Icon(Icons.expand_more_rounded,
+                color: isDark ? const Color(0xFFA78BFA) : VoidColors.primary, 
+                size: 16),
           ],
         ),
       ),

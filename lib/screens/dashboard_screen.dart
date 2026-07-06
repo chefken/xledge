@@ -55,11 +55,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Recent', style: VoidTextStyles.titleLarge.copyWith(color: context.xTxPri)),
+                    Text(
+                      'Recent',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                     GestureDetector(
                       onTap: widget.onSeeAll,
-                      child: Text('See all', style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 13, fontWeight: FontWeight.w400, color: VoidColors.primary)),
+                      child: Text(
+                        'See all',
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: VoidColors.primary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -191,9 +200,9 @@ class _HeroCarousel extends StatelessWidget {
     final cards = [
       _CardData(tag: 'THIS MONTH',   label: 'Total Spent', amount: totalSpend,
           colors: [const Color(0xFF1A1830), const Color(0xFF2D2A52), const Color(0xFF3D3870)]),
-      _CardData(tag: 'THIS MONTH',   label: 'Income',      amount: totalAllow,
+      _CardData(tag: 'THIS MONTH',   label: 'Total Allowance',      amount: totalAllow,
           colors: [const Color(0xFF1C1A34), const Color(0xFF2E2B54), const Color(0xFF3E3A72)]),
-      _CardData(tag: 'OUTSTANDING',  label: 'You Owe',     amount: totalDebt,
+      _CardData(tag: 'THIS MONTH',  label: 'You Owe',     amount: totalDebt,
           colors: [const Color(0xFF181628), const Color(0xFF282546), const Color(0xFF363264)]),
     ];
     return Column(children: [
