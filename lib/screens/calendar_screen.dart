@@ -198,109 +198,115 @@ class _CalendarCard extends StatelessWidget {
   });
 
   @override
-Widget build(BuildContext context) {
-  return Container(
-    decoration: BoxDecoration(
-      color: VoidColors.surface,
-      borderRadius: BorderRadius.circular(28),
-      boxShadow: const [
-        BoxShadow(
-          color: VoidColors.shadowMd,
-          blurRadius: 24,
-          offset: Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Theme(
-      data: Theme.of(context).copyWith(
-        colorScheme: Theme.of(context).colorScheme.copyWith(
-          primary: VoidColors.primaryLight,
-          onPrimary: VoidColors.primary,
-        ),
+  Widget build(BuildContext context) {
+    return Container(
+      // FIX 1: Pulled top padding down to 4 to let the layout shift upward, 
+      // and left the extra bottom padding at 24 so the bottom row doesn't choke.
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      decoration: BoxDecoration(
+        color: VoidColors.surface,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: VoidColors.shadowMd,
+            blurRadius: 24,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: TableCalendar<Expense>(
-        firstDay: DateTime(2020),
-        lastDay: DateTime(2030),
-        focusedDay: focused,
-        selectedDayPredicate: (d) => isSameDay(d, selected),
-        eventLoader: (day) {
-          final key = DateTime(day.year, day.month, day.day);
-          return events[key] ?? [];
-        },
-        onDaySelected: onDaySelected,
-        onPageChanged: onPageChanged,
-        calendarFormat: CalendarFormat.month,
-        availableCalendarFormats: const {
-          CalendarFormat.month: 'Month',
-        },
-        startingDayOfWeek: StartingDayOfWeek.sunday,
-        headerStyle: HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-          leftChevronIcon: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: VoidColors.outlineVariant,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.chevron_left_rounded,
-                color: VoidColors.textSecondary, size: 18),
-          ),
-          rightChevronIcon: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: VoidColors.outlineVariant,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.chevron_right_rounded,
-                color: VoidColors.textSecondary, size: 18),
-          ),
-          titleTextStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: VoidColors.textPrimary,
-            letterSpacing: -0.2,
-          ),
-          headerPadding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-        ),
-        daysOfWeekStyle: DaysOfWeekStyle(
-          weekdayStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-            color: VoidColors.textHint,
-          ),
-          weekendStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-            color: VoidColors.textHint,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+            primary: VoidColors.primaryLight,
+            onPrimary: VoidColors.primary,
           ),
         ),
-        calendarStyle: CalendarStyle(
-          outsideDaysVisible: false,
-          selectedDecoration: const BoxDecoration(
-            color: VoidColors.primaryLight,
-            shape: BoxShape.circle,
+        child: TableCalendar<Expense>(
+          firstDay: DateTime(2020),
+          lastDay: DateTime(2030),
+          focusedDay: focused,
+          selectedDayPredicate: (d) => isSameDay(d, selected),
+          eventLoader: (day) {
+            final key = DateTime(day.year, day.month, day.day);
+            return events[key] ?? [];
+          },
+          onDaySelected: onDaySelected,
+          onPageChanged: onPageChanged,
+          calendarFormat: CalendarFormat.month,
+          rowHeight: 44, 
+          availableCalendarFormats: const {
+            CalendarFormat.month: 'Month',
+          },
+          startingDayOfWeek: StartingDayOfWeek.sunday,
+          headerStyle: HeaderStyle(
+            formatButtonVisible: false,
+            titleCentered: true,
+            leftChevronIcon: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: VoidColors.outlineVariant,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.chevron_left_rounded,
+                  color: VoidColors.textSecondary, size: 18),
+            ),
+            rightChevronIcon: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: VoidColors.outlineVariant,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.chevron_right_rounded,
+                  color: VoidColors.textSecondary, size: 18),
+            ),
+            titleTextStyle: GoogleFonts.bricolageGrotesque(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: VoidColors.textPrimary,
+              letterSpacing: -0.2,
+            ),
+            // FIX 2: Reduced top header padding from 20 to 6. 
+            // This pulls "July 2026" and the chevron switch arrows straight to the top.
+            headerPadding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
           ),
-          selectedTextStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: VoidColors.primary,
+          daysOfWeekStyle: DaysOfWeekStyle(
+            weekdayStyle: GoogleFonts.bricolageGrotesque(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: VoidColors.textHint,
+            ),
+            weekendStyle: GoogleFonts.bricolageGrotesque(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: VoidColors.textHint,
+            ),
           ),
-          isTodayHighlighted: true,
-          todayDecoration: const BoxDecoration(
-            color: VoidColors.primaryLight,
-            shape: BoxShape.circle,
-          ),
-          todayTextStyle: GoogleFonts.bricolageGrotesque(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: VoidColors.primary,
-          ),
-          defaultDecoration: const BoxDecoration(
-            color: Colors.transparent,
-            shape: BoxShape.circle,
+          calendarStyle: CalendarStyle(
+            outsideDaysVisible: false,
+            selectedDecoration: const BoxDecoration(
+              color: VoidColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+            selectedTextStyle: GoogleFonts.bricolageGrotesque(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: VoidColors.primary,
+            ),
+            isTodayHighlighted: true,
+            todayDecoration: const BoxDecoration(
+              color: VoidColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+            todayTextStyle: GoogleFonts.bricolageGrotesque(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: VoidColors.primary,
+            ),
+            defaultDecoration: const BoxDecoration(
+              color: Colors.transparent,
+              shape: BoxShape.circle,
           ),
           defaultTextStyle: GoogleFonts.bricolageGrotesque(
             fontSize: 13,
@@ -325,9 +331,9 @@ Widget build(BuildContext context) {
           markerMargin: const EdgeInsets.only(top: 2),
           cellMargin: const EdgeInsets.all(4),
         ),
-      ),   // closes TableCalendar
-    ),     // closes Theme
-  );       // closes Container
+      ),
+    ),
+  );
 }
 }
 
@@ -425,19 +431,10 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        gradient: isAllowance
-            // Light purple gradient for Allowance
-            ? const LinearGradient(
-                colors: [Color(0xFFEDE8FF), Color(0xFFD8CCFF)],
-                begin: Alignment.topLeft,
-                end:   Alignment.bottomRight,
-              )
-            // White gradient for Spent — no red anywhere
-            : const LinearGradient(
-                colors: [Color(0xFFFFFFFF), Color(0xFFF4F4F6)],
-                begin: Alignment.topLeft,
-                end:   Alignment.bottomRight,
-              ),
+        // FIX: Pure solid colors only — completely removed the gradient property
+        color: isAllowance
+            ? VoidColors.primary
+            : const Color(0xFFF4F4F6),
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
@@ -456,7 +453,7 @@ class _StatChip extends StatelessWidget {
               fontSize: 10,
               fontWeight: FontWeight.w400,
               color: isAllowance
-                  ? VoidColors.primary.withOpacity(0.7)
+                  ? Colors.white.withOpacity(0.7)
                   : VoidColors.textHint,
             ),
           ),
@@ -467,10 +464,9 @@ class _StatChip extends StatelessWidget {
               fontSize: 15,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.4,
-              // Explicitly set — no theme inheritance, no red
               color: isAllowance
-                  ? VoidColors.primary        // purple for Allowance
-                  : VoidColors.textPrimary,   // dark for Spent
+                  ? Colors.white
+                  : VoidColors.textPrimary,
             ),
           ),
         ],

@@ -343,7 +343,7 @@ class _CalendarSheetState extends State<_CalendarSheet> {
         Container(width: 36, height: 4,
             decoration: BoxDecoration(color: context.xBorder, borderRadius: BorderRadius.circular(2))),
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
           child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text('Calendar', style: GoogleFonts.bricolageGrotesque(
                 fontSize: 22, fontWeight: FontWeight.w600, color: context.xTxPri, letterSpacing: -0.4)),
@@ -362,8 +362,10 @@ class _CalendarSheetState extends State<_CalendarSheet> {
             physics: const BouncingScrollPhysics(),
             child: Column(children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), 
                 child: Container(
+                  // FIX: Added 24px of horizontal padding inside the container to squeeze the dates grid inward
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 12), 
                   decoration: BoxDecoration(
                     color: context.xCard,
                     borderRadius: BorderRadius.circular(24),
@@ -395,14 +397,15 @@ class _CalendarSheetState extends State<_CalendarSheet> {
                       ),
                       titleTextStyle: GoogleFonts.bricolageGrotesque(
                           fontSize: 15, fontWeight: FontWeight.w600, color: context.xTxPri, letterSpacing: -0.2),
-                      headerPadding: const EdgeInsets.fromLTRB(16, 18, 16, 6),
+                      headerPadding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     ),
                     daysOfWeekStyle: DaysOfWeekStyle(
                       weekdayStyle: GoogleFonts.bricolageGrotesque(fontSize: 11, color: context.xTxHint),
                       weekendStyle: GoogleFonts.bricolageGrotesque(fontSize: 11, color: context.xTxHint),
                     ),
                     calendarStyle: const CalendarStyle(
-                      outsideDaysVisible: false, markersMaxCount: 0,
+                      outsideDaysVisible: false, 
+                      markersMaxCount: 0,
                       isTodayHighlighted: false,
                       selectedDecoration: BoxDecoration(color: Colors.transparent),
                       todayDecoration:    BoxDecoration(color: Colors.transparent),
@@ -430,7 +433,7 @@ class _CalendarSheetState extends State<_CalendarSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(
@@ -529,23 +532,23 @@ class _MiniChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if this card represents an active allowance metric
+    final bool isAllowanceChip = label == 'Allowance' && isGradient;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isGradient ? null : context.xFill,
-        gradient: isGradient ? const LinearGradient(
-          colors: [Color(0xFFA78BFA), Color(0xFF5B3FD4)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
-        ) : null,
+        // FIX: Replaced gradient parameter entirely with clean solid color mappings
+        color: isAllowanceChip ? VoidColors.primary : context.xFill,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: GoogleFonts.bricolageGrotesque(
-            fontSize: 9, color: isGradient ? Colors.white70 : context.xTxHint)),
+            fontSize: 9, color: isAllowanceChip ? Colors.white70 : context.xTxHint)),
         const SizedBox(height: 2),
         Text(value, style: GoogleFonts.bricolageGrotesque(
             fontSize: 13, fontWeight: FontWeight.w700,
-            color: isGradient ? Colors.white : context.xTxPri, letterSpacing: -0.3)),
+            color: isAllowanceChip ? Colors.white : context.xTxPri, letterSpacing: -0.3)),
       ]),
     );
   }

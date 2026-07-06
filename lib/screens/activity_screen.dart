@@ -44,13 +44,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
-                child: // Replace the header Row in activity_screen.dart:
-                Padding(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Activity', style: VoidTextStyles.headlineLarge),
+                      Text('Activity', style: Theme.of(context).textTheme.headlineLarge),
                       Row(
                         children: [
                           GestureDetector(
@@ -62,16 +61,18 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               height: 42,
                               decoration: BoxDecoration(
                                 color: hasData
-                                    ? VoidColors.primaryLight
+                                    ? (isDark 
+                                        ? VoidColors.primary.withOpacity(0.12) 
+                                        : VoidColors.primaryLight)
                                     : (isDark
-                                          ? VoidColors.darkCard
-                                          : VoidColors.outlineVariant),
+                                        ? VoidColors.darkCard
+                                        : VoidColors.outlineVariant),
                                 borderRadius: BorderRadius.circular(13),
                               ),
                               child: Icon(
                                 Icons.ios_share_rounded,
                                 color: hasData
-                                    ? VoidColors.primary
+                                    ? (isDark ? const Color(0xFFA78BFA) : VoidColors.primary)
                                     : VoidColors.textHint,
                                 size: 17,
                               ),
@@ -127,7 +128,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   ),
                 ),
               ],
-
               if (hasData) ...[
                 _SectionTitle('Spending Mix'),
                 SliverToBoxAdapter(
@@ -150,7 +150,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: analysis!.categoryBreakdown
+                              children: analysis.categoryBreakdown
                                   .take(4)
                                   .map((c) => _LegendRow(cat: c))
                                   .toList(),
@@ -167,10 +167,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (_, i) => _CatInterpretRow(
-                        cat: analysis!.categoryBreakdown[i],
+                        cat: analysis.categoryBreakdown[i],
                         isTop: i == 0,
                       ),
-                      childCount: analysis!.categoryBreakdown.length,
+                      childCount: analysis.categoryBreakdown.length,
                     ),
                   ),
                 ),
@@ -179,7 +179,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                     child: _ReflectionCard(
                       provider: provider,
-                      analysis: analysis!,
+                      analysis: analysis,
                     ),
                   ),
                 ),
@@ -191,72 +191,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
         );
       },
     );
-  }
-
-  List<String> _generateInsights(VoidProvider provider, DateTime now) {
-    final expenses = provider
-        .getAllExpensesForMonth(now.year, now.month)
-        .where((e) => !e.isAllowance)
-        .toList();
-
-    if (expenses.isEmpty) return [];
-
-    final insights = <String>[];
-
-    final lowDays = <int>{};
-    for (final e in expenses) {
-      lowDays.add(e.date.day);
-    }
-    final totalDays = DateUtils.getDaysInMonth(now.year, now.month);
-    final quietDays = totalDays - lowDays.length;
-    if (quietDays > 0) {
-      insights.add(
-        'You had $quietDays quiet days with no spending this month.',
-      );
-    }
-
-    final weekendSpend = expenses
-        .where(
-          (e) =>
-              e.date.weekday == DateTime.saturday ||
-              e.date.weekday == DateTime.sunday,
-        )
-        .fold(0.0, (s, e) => s + e.amount);
-
-    final weekdaySpend = expenses
-        .where(
-          (e) =>
-              e.date.weekday != DateTime.saturday &&
-              e.date.weekday != DateTime.sunday,
-        )
-        .fold(0.0, (s, e) => s + e.amount);
-
-    if (weekendSpend > weekdaySpend * 0.4) {
-      insights.add(
-        'Weekends accounted for a notable portion of your spending.',
-      );
-    }
-
-    final analysis = provider.analysis;
-    if (analysis != null && analysis.primaryLeak != null) {
-      insights.add(
-        '${analysis.primaryLeak} is your primary spending category at '
-        '${analysis.primaryLeakPercentage!.toStringAsFixed(0)}% of total.',
-      );
-    }
-
-    final net = provider.netBalance;
-    if (net > 0) {
-      insights.add(
-        'You are ₹${net.toStringAsFixed(0)} in the green this month.',
-      );
-    } else if (net < 0) {
-      insights.add(
-        'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.',
-      );
-    }
-
-    return insights;
   }
 
   Future<void> _exportPdf(BuildContext context, VoidProvider provider) async {
@@ -307,19 +241,8 @@ class _MonthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     final net = provider.netBalance;
     final pos = net >= 0;
@@ -359,8 +282,7 @@ class _MonthCard extends StatelessWidget {
               Expanded(
                 child: _MonthStat(
                   label: 'Spent',
-                  value:
-                      '₹${(provider.analysis?.totalSpend ?? 0).toStringAsFixed(0)}',
+                  value: '₹${(provider.analysis?.totalSpend ?? 0).toStringAsFixed(0)}',
                 ),
               ),
               Expanded(
@@ -457,89 +379,88 @@ class _MonthlyBarGraphState extends State<_MonthlyBarGraph>
     return AnimatedBuilder(
       animation: _anim,
       builder: (_, __) {
-        return SizedBox(
-          height: 160,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(widget.data.length, (i) {
-              final val = widget.data[i];
-              final ratio = max > 0 ? val / max : 0.0;
-              final animRatio = ratio * _anim.value;
-              final isTapped = _tapped == i;
-              final intensity = ratio.clamp(0.15, 1.0);
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: SizedBox(
+            height: 172,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(widget.data.length, (i) {
+                final val = widget.data[i];
+                final ratio = max > 0 ? val / max : 0.0;
+                final animRatio = ratio * _anim.value;
+                final isTapped = _tapped == i;
+                final intensity = ratio.clamp(0.15, 1.0);
 
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _tapped = isTapped ? -1 : i),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      if (isTapped)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: VoidColors.primary,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '₹${val.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontFamily: 'BricolageGrotesque',
-                                fontSize: 9,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _tapped = isTapped ? -1 : i),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (isTapped)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: VoidColors.primary,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '₹${val.toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                  fontFamily: 'BricolageGrotesque',
+                                  fontSize: 9,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 3),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          height: (animRatio * 120).clamp(4.0, 120.0),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                VoidColors.primary.withOpacity(
-                                  0.3 + intensity * 0.7,
-                                ),
-                                VoidColors.primaryDark.withOpacity(
-                                  0.4 + intensity * 0.6,
-                                ),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            height: (animRatio * 120).clamp(4.0, 120.0),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  VoidColors.primary.withOpacity(0.3 + intensity * 0.7),
+                                  VoidColors.primaryDark.withOpacity(0.4 + intensity * 0.6),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              border: isTapped
+                                  ? Border.all(
+                                      color: VoidColors.primary,
+                                      width: 1.5,
+                                    )
+                                  : null,
                             ),
-                            borderRadius: BorderRadius.circular(8),
-                            border: isTapped
-                                ? Border.all(
-                                    color: VoidColors.primary,
-                                    width: 1.5,
-                                  )
-                                : null,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        labels[i],
-                        style: const TextStyle(
-                          fontFamily: 'BricolageGrotesque',
-                          fontSize: 10,
-                          color: VoidColors.textHint,
-                          fontWeight: FontWeight.w400,
+                        const SizedBox(height: 6),
+                        Text(
+                          labels[i],
+                          style: const TextStyle(
+                            fontFamily: 'BricolageGrotesque',
+                            fontSize: 10,
+                            color: VoidColors.textHint,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
+            ),
           ),
         );
       },
@@ -552,47 +473,47 @@ class _InsightTile extends StatelessWidget {
   const _InsightTile({required this.text});
 
   @override
-Widget build(BuildContext context) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: context.xCard,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: context.xShadow,
-          blurRadius: 12,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 32, height: 32,
-          decoration: BoxDecoration(
-            color: VoidColors.primaryLight,
-            borderRadius: BorderRadius.circular(10),
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.xCard,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: context.xShadow,
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
-          child: const Icon(Icons.lightbulb_outline_rounded,
-              color: VoidColors.primary, size: 15),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(text,
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 13,
-                color: context.xTxPri,
-                fontWeight: FontWeight.w400,
-                height: 1.45,
-                letterSpacing: -0.1,
-              )),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32, height: 32,
+            decoration: BoxDecoration(
+              color: VoidColors.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.lightbulb_outline_rounded,
+                color: VoidColors.primary, size: 15),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(text,
+                style: GoogleFonts.bricolageGrotesque(
+                  fontSize: 13,
+                  color: context.xTxPri,
+                  fontWeight: FontWeight.w400,
+                  height: 1.45,
+                  letterSpacing: -0.1,
+                )),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MonoDonut extends StatelessWidget {
@@ -658,29 +579,21 @@ class _LegendRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const shades = [
-      VoidColors.primary,
-      Color(0xFF9B7EF8),
-      Color(0xFFB9A5FC),
-      Color(0xFFD0C4FD),
-    ];
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: shades[0], shape: BoxShape.circle),
+            width: 8, height: 8,
+            decoration: const BoxDecoration(color: VoidColors.primary, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               cat.category,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: VoidColors.textSecondary,
+                color: context.xTxSec, // FIX: Linked to adaptive theme parameters instead of light mode hardcoded labels
                 fontWeight: FontWeight.w400,
               ),
               overflow: TextOverflow.ellipsis,
@@ -688,10 +601,10 @@ class _LegendRow extends StatelessWidget {
           ),
           Text(
             '${cat.percentage.toStringAsFixed(0)}%',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: VoidColors.textPrimary,
+              color: context.xTxPri, // FIX: Linked to adaptive primary text layers for high visibility match
             ),
           ),
         ],
@@ -707,90 +620,89 @@ class _CatInterpretRow extends StatelessWidget {
   const _CatInterpretRow({required this.cat, required this.isTop});
 
   @override
-Widget build(BuildContext context) {
-  final meta = categoryMeta(cat.category);
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final meta = categoryMeta(cat.category);
 
-  return Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: isTop
-          ? VoidColors.primaryLight
-          : context.xCard,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: isTop
-          ? null
-          : [
-              BoxShadow(
-                color: context.xShadow,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 38, height: 38,
-          decoration: BoxDecoration(
-            color: isTop
-                ? VoidColors.primary.withOpacity(0.12)
-                : context.xIconBg,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            meta.icon,
-            size: 17,
-            color: isTop
-                ? VoidColors.primary
-                : context.xIconColor,
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(cat.category,
-                  style: GoogleFonts.bricolageGrotesque(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: isTop
-                        ? VoidColors.primary
-                        : context.xTxPri,
-                    letterSpacing: -0.1,
-                  )),
-              const SizedBox(height: 3),
-              Text(
-                isTop
-                    ? 'Highest spend · ${cat.percentage.toStringAsFixed(0)}% of total'
-                    : '${cat.percentage.toStringAsFixed(0)}% of total spending',
-                style: GoogleFonts.bricolageGrotesque(
-                  fontSize: 11,
-                  color: isTop
-                      ? VoidColors.primary.withOpacity(0.7)
-                      : context.xTxHint,
-                  fontWeight: FontWeight.w400,
+    final cardBg = isTop
+        ? (isDark ? VoidColors.primary.withOpacity(0.12) : VoidColors.primaryLight)
+        : context.xCard;
+
+    final activeColor = isDark ? const Color(0xFFA78BFA) : VoidColors.primary;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isTop
+            ? null
+            : [
+                BoxShadow(
+                  color: context.xShadow,
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-            ],
+              ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38, height: 38,
+            decoration: BoxDecoration(
+              color: isTop
+                  ? VoidColors.primary.withOpacity(0.12)
+                  : context.xIconBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              meta.icon,
+              size: 17,
+              color: isTop ? activeColor : context.xIconColor,
+            ),
           ),
-        ),
-        Text(
-          '₹${cat.total.toStringAsFixed(0)}',
-          style: GoogleFonts.bricolageGrotesque(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: isTop
-                ? VoidColors.primary
-                : context.xTxPri,
-            letterSpacing: -0.3,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(cat.category,
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isTop ? activeColor : context.xTxPri,
+                      letterSpacing: -0.1,
+                    )),
+                const SizedBox(height: 3),
+                Text(
+                  isTop
+                      ? 'Highest spend · ${cat.percentage.toStringAsFixed(0)}% of total'
+                      : '${cat.percentage.toStringAsFixed(0)}% of total spending',
+                  style: GoogleFonts.bricolageGrotesque(
+                    fontSize: 11,
+                    color: isTop
+                        ? (isDark ? const Color(0xFFA78BFA).withOpacity(0.7) : VoidColors.primary.withOpacity(0.7))
+                        : context.xTxHint,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+          Text(
+            '₹${cat.total.toStringAsFixed(0)}',
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isTop ? activeColor : context.xTxPri,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ReflectionCard extends StatelessWidget {
@@ -799,52 +711,52 @@ class _ReflectionCard extends StatelessWidget {
   const _ReflectionCard({required this.provider, required this.analysis});
 
   @override
-Widget build(BuildContext context) {
-  const months = [
-    '', 'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  final month = months[provider.selectedMonth];
-  final leak  = analysis.primaryLeak ?? 'various categories';
-  final net   = provider.netBalance;
-  final netStr = net >= 0
-      ? 'You stayed in the green by ₹${net.toStringAsFixed(0)}.'
-      : 'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.';
+  Widget build(BuildContext context) {
+    const months = [
+      '', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    final month = months[provider.selectedMonth];
+    final leak  = analysis.primaryLeak ?? 'various categories';
+    final net   = provider.netBalance;
+    final netStr = net >= 0
+        ? 'You stayed in the green by ₹${net.toStringAsFixed(0)}.'
+        : 'You overspent by ₹${net.abs().toStringAsFixed(0)} this month.';
 
-  final reflection =
-      'In $month, most of your spending went towards $leak. '
-      '$netStr Consider reviewing your $leak expenses going into next month.';
+    final reflection =
+        'In $month, most of your spending went towards $leak. '
+        '$netStr Consider reviewing your $leak expenses going into next month.';
 
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: context.xCard,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Monthly Reflection',
-            style: GoogleFonts.bricolageGrotesque(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: context.xTxHint,
-              letterSpacing: 0.3,
-            )),
-        const SizedBox(height: 10),
-        Text(reflection,
-            style: GoogleFonts.bricolageGrotesque(
-              fontSize: 14,
-              color: context.xTxPri,
-              fontWeight: FontWeight.w400,
-              height: 1.55,
-              letterSpacing: -0.1,
-            )),
-      ],
-    ),
-  );
-}
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.xCard,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Monthly Reflection',
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: context.xTxHint,
+                letterSpacing: 0.3,
+              )),
+          const SizedBox(height: 10),
+          Text(reflection,
+              style: GoogleFonts.bricolageGrotesque(
+                fontSize: 14,
+                color: context.xTxPri,
+                fontWeight: FontWeight.w400,
+                height: 1.55,
+                letterSpacing: -0.1,
+              )),
+        ],
+      ),
+    );
+  }
 }
 
 class _EmptyActivity extends StatelessWidget {
@@ -856,8 +768,7 @@ class _EmptyActivity extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 60,
-          height: 60,
+          width: 60, height: 60,
           decoration: BoxDecoration(
             color: VoidColors.primaryLight,
             borderRadius: BorderRadius.circular(18),
@@ -869,7 +780,6 @@ class _EmptyActivity extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-
         Text(
           'No data yet',
           style: TextStyle(
@@ -878,16 +788,12 @@ class _EmptyActivity extends StatelessWidget {
             color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
           ),
         ),
-
         const SizedBox(height: 6),
-
         Text(
           'Add expenses to see your monthly report',
           style: TextStyle(
             fontSize: 14,
-            color: isDark
-                ? VoidColors.darkTextSecondary
-                : VoidColors.textSecondary,
+            color: isDark ? VoidColors.darkTextSecondary : VoidColors.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
