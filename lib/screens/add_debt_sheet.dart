@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:xledge/providers/void_provider.dart';
 import 'package:xledge/utils/void_colors.dart';
 import 'package:xledge/utils/theme_ext.dart';
+import 'package:xledge/utils/void_text_styles.dart';
 
 class AddDebtSheet extends StatefulWidget {
   const AddDebtSheet({super.key});
@@ -105,14 +106,14 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 22),
                 _SheetField(
                   controller: _nameCtrl,
-                  hint: '',
+                  hint: 'Who is this?',
                   label: 'Contact',
                   capitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _amountCtrl,
-                  hint: '',
+                  hint: '0',
                   label: 'Amount',
                   prefix: '₹  ',
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -121,7 +122,7 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _descCtrl,
-                  hint: '',
+                  hint: 'What was it for?',
                   label: 'Reason',
                   capitalization: TextCapitalization.sentences,
                 ),
@@ -195,20 +196,21 @@ class _TypeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     const duration = Duration(milliseconds: 200);
-    final curve = Curves.easeInOutCubic;
 
-    // Fix: Match the exact depth of the OWES YOU background card
+    // Matches the card background exactly to the summary card (0.12 opacity)
     final cardBg = active
         ? (isDark ? VoidColors.primary.withOpacity(0.12) : VoidColors.primaryLight)
         : (isDark ? VoidColors.darkCard : VoidColors.outlineVariant);
 
     final iconBg = active
-        ? VoidColors.primary.withOpacity(0.15)
+        ? VoidColors.primary.withOpacity(0.18)
         : (isDark ? VoidColors.darkBorder : VoidColors.outline);
 
-    // Fix: Use the bright lavender shade so the text pops exactly like the "₹0"
-    final textColor = active
-        ? (isDark ? const Color(0xFFA78BFA) : VoidColors.primary)
+    // Soft lavender active text/icon color overlay matching main screen
+    final activeColor = isDark ? const Color(0xFFA78BFA) : VoidColors.primary;
+
+    final primaryTextColor = active
+        ? activeColor
         : (isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary);
 
     return GestureDetector(
@@ -218,61 +220,60 @@ class _TypeCard extends StatelessWidget {
       },
       child: AnimatedContainer(
         duration: duration,
-        curve: curve,
+        curve: Curves.easeInOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: duration,
-              curve: curve,
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                color: iconBg,
-                shape: BoxShape.circle,
-              ),
-              // Wrap with an explicit animated theme to smoothly blend icon pigments
-              child: AnimatedTheme(
-                data: ThemeData(
-                  iconTheme: IconThemeData(
-                    color: active ? VoidColors.primary : VoidColors.textHint,
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  size: 15,
-                ),
-              ),
+        child: AnimatedTheme(
+          duration: duration,
+          data: ThemeData(
+            iconTheme: IconThemeData(
+              color: active ? activeColor : VoidColors.textHint,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Fix: Interpolates typography colors inside the animation timeline
-                  AnimatedDefaultTextStyle(
-                    duration: duration,
-                    curve: curve,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
+          ),
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: duration,
+                curve: Curves.easeInOut,
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 15),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AnimatedDefaultTextStyle(
+                      duration: duration,
+                      curve: Curves.easeInOut,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: primaryTextColor,
+                        fontFamily: 'BricolageGrotesque',
+                      ),
+                      child: Text(label),
                     ),
-                    child: Text(label),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(sublabel,
+                    const SizedBox(height: 2),
+                    Text(
+                      sublabel,
                       style: TextStyle(
                         fontSize: 10,
                         color: isDark ? VoidColors.darkTextHint : VoidColors.textHint,
-                      )),
-                ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -385,10 +386,8 @@ class _DebtSubmitBtnState extends State<_DebtSubmitBtn>
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 17),
           decoration: BoxDecoration(
-            // Completely flat solid fallback style matching upper layout updates
             color: VoidColors.primary,
             borderRadius: BorderRadius.circular(18),
-            // Stripped out gradient configuration maps and soft drop shadows entirely
           ),
           alignment: Alignment.center,
           child: Text(
