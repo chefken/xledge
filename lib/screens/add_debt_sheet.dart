@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:xledge/providers/void_provider.dart';
 import 'package:xledge/utils/void_colors.dart';
-import 'package:xledge/utils/void_text_styles.dart';
+import 'package:xledge/utils/theme_ext.dart';
 
 class AddDebtSheet extends StatefulWidget {
   const AddDebtSheet({super.key});
@@ -63,6 +63,9 @@ class _AddDebtSheetState extends State<AddDebtSheet>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return FadeTransition(
       opacity: _fade,
       child: SlideTransition(
@@ -71,10 +74,9 @@ class _AddDebtSheetState extends State<AddDebtSheet>
           padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
-            decoration: const BoxDecoration(
-              color: VoidColors.surface,
-              borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(28)),
+            decoration: BoxDecoration(
+              color: isDark ? VoidColors.darkSurface : VoidColors.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             ),
             padding: const EdgeInsets.fromLTRB(24, 14, 24, 40),
             child: Column(
@@ -86,14 +88,15 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                     width: 36, height: 4,
                     margin: const EdgeInsets.only(bottom: 22),
                     decoration: BoxDecoration(
-                      color: VoidColors.outline,
+                      color: isDark ? VoidColors.darkBorder : VoidColors.outline,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
-                 Text('Add Debt',
-                    style: VoidTextStyles.headlineMedium),
-                
+                Text(
+                  'Add Debt',
+                  style: theme.textTheme.headlineMedium,
+                ),
                 const SizedBox(height: 20),
                 _DebtTypeSelector(
                   isIOwe: _isIOwe,
@@ -102,24 +105,23 @@ class _AddDebtSheetState extends State<AddDebtSheet>
                 const SizedBox(height: 22),
                 _SheetField(
                   controller: _nameCtrl,
-                  hint: '',
+                  hint: 'Who is this?',
                   label: 'Contact',
                   capitalization: TextCapitalization.words,
                 ),
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _amountCtrl,
-                  hint: '',
+                  hint: '0',
                   label: 'Amount',
                   prefix: '₹  ',
-                  keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   isLarge: true,
                 ),
                 const SizedBox(height: 14),
                 _SheetField(
                   controller: _descCtrl,
-                  hint: '',
+                  hint: 'What was it for?',
                   label: 'Reason',
                   capitalization: TextCapitalization.sentences,
                 ),
@@ -191,6 +193,16 @@ class _TypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final cardBg = active
+        ? (isDark ? VoidColors.primary.withOpacity(0.15) : VoidColors.primaryLight)
+        : (isDark ? VoidColors.darkCard : VoidColors.outlineVariant);
+
+    final iconBg = active
+        ? VoidColors.primary.withOpacity(0.15)
+        : (isDark ? VoidColors.darkBorder : VoidColors.outline);
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -201,31 +213,22 @@ class _TypeCard extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: active ? VoidColors.primaryLight : VoidColors.outlineVariant,
+          color: cardBg,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: active
-                ? VoidColors.primary.withOpacity(0.35)
-                : Colors.transparent,
-            width: 1.5,
-          ),
+          // Stripped out the outer active border stroke completely for a clean flat design
         ),
         child: Row(
           children: [
             Container(
               width: 32, height: 32,
               decoration: BoxDecoration(
-                color: active
-                    ? VoidColors.primary.withOpacity(0.15)
-                    : VoidColors.outline,
+                color: iconBg,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 15,
-                color: active
-                    ? VoidColors.primary
-                    : VoidColors.textHint,
+                color: active ? VoidColors.primary : VoidColors.textHint,
               ),
             ),
             const SizedBox(width: 10),
@@ -239,12 +242,12 @@ class _TypeCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: active
                             ? VoidColors.primary
-                            : VoidColors.textPrimary,
+                            : (isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary),
                       )),
                   Text(sublabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: VoidColors.textHint,
+                        color: isDark ? VoidColors.darkTextHint : VoidColors.textHint,
                       )),
                 ],
               ),
@@ -277,14 +280,17 @@ class _SheetField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: VoidColors.textHint,
+              color: isDark ? VoidColors.darkTextHint : VoidColors.textHint,
               letterSpacing: 0.4,
             )),
         const SizedBox(height: 6),
@@ -293,19 +299,20 @@ class _SheetField extends StatelessWidget {
           keyboardType:        keyboardType,
           textCapitalization:  capitalization,
           style: isLarge
-              ? const TextStyle(
+              ? TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  color: VoidColors.textPrimary,
+                  color: isDark ? VoidColors.darkTextPrimary : VoidColors.textPrimary,
                   letterSpacing: -0.6,
                 )
-              : VoidTextStyles.bodyLarge,
+              : theme.textTheme.bodyLarge,
           decoration: InputDecoration(
             hintText:    hint,
+            hintStyle: TextStyle(color: isDark ? VoidColors.darkTextHint : VoidColors.textHint),
             prefixText:  prefix,
-            prefixStyle: const TextStyle(
+            prefixStyle: TextStyle(
               fontSize: 16,
-              color: VoidColors.textHint,
+              color: isDark ? VoidColors.darkTextHint : VoidColors.textHint,
             ),
           ),
         ),
@@ -358,22 +365,10 @@ class _DebtSubmitBtnState extends State<_DebtSubmitBtn>
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 17),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xFF9B7EF8),
-                Color(0xFF6C3CE1),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            // Completely flat solid fallback style matching upper layout updates
+            color: VoidColors.primary,
             borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: VoidColors.primary.withOpacity(0.28),
-                blurRadius: 16,
-                offset: const Offset(0, 5),
-              ),
-            ],
+            // Stripped out gradient configuration maps and soft drop shadows entirely
           ),
           alignment: Alignment.center,
           child: Text(
